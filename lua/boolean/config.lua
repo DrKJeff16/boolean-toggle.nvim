@@ -1,19 +1,21 @@
 local Util = require('boolean.util')
 
 ---@class BooleanNvimOpts.Keymaps
----@field to_false? string
----@field to_true? string
----@field toggle? string
+---@field to_false? string|nil
+---@field to_true? string|nil
+---@field toggle? string|nil
 
 ---@class BooleanNvimDefaults.Keymaps: BooleanNvimOpts.Keymaps
----@field to_false string
----@field to_true string
----@field toggle string
+---@field to_false string|nil
+---@field to_true string|nil
+---@field toggle string|nil
 
 ---@class BooleanNvimOpts
+---@field auto_write? boolean
 ---@field keymaps? BooleanNvimOpts.Keymaps|nil
 
 ---@class BooleanNvimDefaults: BooleanNvimOpts
+---@field auto_write boolean
 ---@field keymaps BooleanNvimDefaults.Keymaps
 
 ---@class BooleanNvim.Config
@@ -23,11 +25,8 @@ local M = {}
 ---@return BooleanNvimDefaults defaults
 function M.get_defaults()
   return { ---@type BooleanNvimDefaults
-    keymaps = {
-      toggle = '<M-b>',
-      to_false = '<M-f>',
-      to_true = '<M-t>',
-    },
+    auto_write = false,
+    keymaps = { toggle = '<M-b>', to_false = '<M-f>', to_true = '<M-t>' },
   }
 end
 

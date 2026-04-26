@@ -67,33 +67,31 @@ function M.setup(opts)
 
   Config.setup(opts or {})
 
-  if not Config.config.keymaps then
-    return
-  end
-
-  if Config.config.keymaps.toggle and Config.config.keymaps.toggle ~= '' then
-    vim.keymap.set(
-      'n',
-      Config.config.keymaps.toggle,
-      M.cursor_toggle_boolean,
-      { desc = 'Invert Boolean Value on Cursor' }
-    )
-  end
-  if Config.config.keymaps.to_false and Config.config.keymaps.to_false ~= '' then
-    vim.keymap.set(
-      'n',
-      Config.config.keymaps.to_false,
-      M.cursor_set_to_false,
-      { desc = 'Set Boolean on Cursor to `false`' }
-    )
-  end
-  if Config.config.keymaps.to_true and Config.config.keymaps.to_true ~= '' then
-    vim.keymap.set(
-      'n',
-      Config.config.keymaps.to_true,
-      M.cursor_set_to_true,
-      { desc = 'Set Boolean on Cursor to `true`' }
-    )
+  if Config.config.keymaps then
+    if Config.config.keymaps.toggle and Config.config.keymaps.toggle ~= '' then
+      vim.keymap.set(
+        'n',
+        Config.config.keymaps.toggle,
+        M.cursor_toggle_boolean,
+        { desc = 'Invert Boolean Value on Cursor' }
+      )
+    end
+    if Config.config.keymaps.to_false and Config.config.keymaps.to_false ~= '' then
+      vim.keymap.set(
+        'n',
+        Config.config.keymaps.to_false,
+        M.cursor_set_to_false,
+        { desc = 'Set Boolean on Cursor to `false`' }
+      )
+    end
+    if Config.config.keymaps.to_true and Config.config.keymaps.to_true ~= '' then
+      vim.keymap.set(
+        'n',
+        Config.config.keymaps.to_true,
+        M.cursor_set_to_true,
+        { desc = 'Set Boolean on Cursor to `true`' }
+      )
+    end
   end
 
   vim.api.nvim_create_user_command(
@@ -144,9 +142,16 @@ function M.cursor_toggle_boolean()
   end
 
   local line = vim.api.nvim_get_current_line()
-  if convert[line:sub(start_col, end_col)] then
-    local before, after = get_boolean_surround(line, start_col, end_col)
-    vim.api.nvim_set_current_line(before .. convert[line:sub(start_col, end_col)] .. after)
+  if not convert[line:sub(start_col, end_col)] then
+    return
+  end
+
+  local before, after = get_boolean_surround(line, start_col, end_col)
+  vim.api.nvim_set_current_line(before .. convert[line:sub(start_col, end_col)] .. after)
+
+  if Config.config.auto_write then
+    pcall(vim.cmd.undojoin)
+    pcall(vim.cmd.write)
   end
 end
 
@@ -158,9 +163,16 @@ function M.cursor_set_to_false()
 
   local line = vim.api.nvim_get_current_line()
   local current_bool = line:sub(start_col, end_col)
-  if convert_to_false[current_bool] then
-    local before, after = get_boolean_surround(line, start_col, end_col)
-    vim.api.nvim_set_current_line(before .. convert[line:sub(start_col, end_col)] .. after)
+  if not convert_to_false[current_bool] then
+    return
+  end
+
+  local before, after = get_boolean_surround(line, start_col, end_col)
+  vim.api.nvim_set_current_line(before .. convert[line:sub(start_col, end_col)] .. after)
+
+  if Config.config.auto_write then
+    pcall(vim.cmd.undojoin)
+    pcall(vim.cmd.write)
   end
 end
 
@@ -172,9 +184,15 @@ function M.cursor_set_to_true()
 
   local line = vim.api.nvim_get_current_line()
   local current_bool = line:sub(start_col, end_col)
-  if convert_to_true[current_bool] then
-    local before, after = get_boolean_surround(line, start_col, end_col)
-    vim.api.nvim_set_current_line(before .. convert[line:sub(start_col, end_col)] .. after)
+  if not convert_to_true[current_bool] then
+    return
+  end
+
+  local before, after = get_boolean_surround(line, start_col, end_col)
+  vim.api.nvim_set_current_line(before .. convert[line:sub(start_col, end_col)] .. after)
+  if Config.config.auto_write then
+    pcall(vim.cmd.undojoin)
+    pcall(vim.cmd.write)
   end
 end
 
