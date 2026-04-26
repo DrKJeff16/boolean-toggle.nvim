@@ -26,7 +26,7 @@ local M = {}
 function M.get_defaults()
   return { ---@type BooleanNvimDefaults
     auto_write = false,
-    keymaps = { toggle = '<M-b>', to_false = '<M-f>', to_true = '<M-t>' },
+    keymaps = { toggle = nil, to_false = nil, to_true = nil },
   }
 end
 
@@ -34,7 +34,14 @@ end
 function M.setup(opts)
   Util.validate({ opts = { opts, { 'table', 'nil' }, true } })
 
-  M.config = vim.tbl_deep_extend('keep', opts or {}, M.get_defaults())
+  local defaults = M.get_defaults()
+  M.config = vim.tbl_deep_extend('keep', opts or {}, defaults)
+
+  for k in pairs(M.config) do
+    if not defaults[k] then
+      M.config[k] = nil
+    end
+  end
   vim.g.boolean_nvim_setup = 1
 end
 
