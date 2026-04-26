@@ -2,10 +2,7 @@ local Util = require('boolean-toggle.util')
 local Config = require('boolean-toggle.config')
 
 local valid_chars = Util.dedup(vim.split('aeflrstuAEFLRSTU', '', { trimempty = false }))
-table.sort(valid_chars)
-
 local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*@-_+=\\|/<>~ ]], '', { trimempty = false })
-table.sort(delim)
 
 ---@enum BooleanNvim.ConvertToFalse
 local convert_to_false = {
@@ -142,15 +139,23 @@ function M.cursor_toggle_boolean()
   end
 
   local line = vim.api.nvim_get_current_line()
-  if not convert[line:sub(start_col, end_col)] then
+  local current_bool = line:sub(start_col, end_col)
+  if not convert[current_bool] then
     return
   end
 
+  local win = vim.api.nvim_get_current_win()
+  local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
-  vim.api.nvim_set_current_line(before .. convert[line:sub(start_col, end_col)] .. after)
+  if not vim.list_contains({ 'f', 'F', 't', 'T' }, line:sub(pos[2] + 1, pos[2] + 1)) then
+    pos[2] = pos[2] + (line:len() > (before .. convert[current_bool] .. after):len() and -1 or 1)
+  end
+
+  vim.api.nvim_set_current_line(before .. convert[current_bool] .. after)
+  pcall(vim.cmd.undojoin)
+  vim.api.nvim_win_set_cursor(win, pos)
 
   if Config.config.auto_write then
-    pcall(vim.cmd.undojoin)
     pcall(vim.cmd.write)
   end
 end
@@ -167,11 +172,19 @@ function M.cursor_set_to_false()
     return
   end
 
+  local win = vim.api.nvim_get_current_win()
+  local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
-  vim.api.nvim_set_current_line(before .. convert[line:sub(start_col, end_col)] .. after)
+  if not vim.list_contains({ 't', 'T' }, line:sub(pos[2] + 1, pos[2] + 1)) then
+    pos[2] = pos[2]
+      + (line:len() > (before .. convert_to_false[current_bool] .. after):len() and -1 or 1)
+  end
+
+  vim.api.nvim_set_current_line(before .. convert_to_false[line:sub(start_col, end_col)] .. after)
+  pcall(vim.cmd.undojoin)
+  vim.api.nvim_win_set_cursor(win, pos)
 
   if Config.config.auto_write then
-    pcall(vim.cmd.undojoin)
     pcall(vim.cmd.write)
   end
 end
@@ -188,10 +201,19 @@ function M.cursor_set_to_true()
     return
   end
 
+  local win = vim.api.nvim_get_current_win()
+  local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
-  vim.api.nvim_set_current_line(before .. convert[line:sub(start_col, end_col)] .. after)
+  if not vim.list_contains({ 't', 'T' }, line:sub(pos[2] + 1, pos[2] + 1)) then
+    pos[2] = pos[2]
+      + (line:len() > (before .. convert_to_true[current_bool] .. after):len() and -1 or 1)
+  end
+
+  vim.api.nvim_set_current_line(before .. convert_to_true[line:sub(start_col, end_col)] .. after)
+  pcall(vim.cmd.undojoin)
+  vim.api.nvim_win_set_cursor(win, pos)
+
   if Config.config.auto_write then
-    pcall(vim.cmd.undojoin)
     pcall(vim.cmd.write)
   end
 end
