@@ -1,11 +1,11 @@
 ---Non-legacy validation spec (>=v0.11)
----@class ValidateSpec
+---@class BooleanNvim.ValidateSpec
 ---@field [1] any
 ---@field [2] vim.validate.Validator
 ---@field [3]? boolean
 ---@field [4]? string
 
----@class MyPlugin.Util
+---@class BooleanNvim.Util
 local M = {}
 
 ---Checks whether nvim is running on Windows.
@@ -22,8 +22,9 @@ end
 ---If the data passed to the function is not a table,
 ---an error will be raised.
 --- ---
----@param T any[]
----@return any[] NT
+---@generic T
+---@param T T
+---@return T NT
 function M.dedup(T)
   M.validate({ T = { T, { 'table' } } })
 
@@ -31,7 +32,7 @@ function M.dedup(T)
     return T
   end
 
-  local NT = {} ---@type any[]
+  local NT = {}
   for _, v in ipairs(T) do
     local not_dup = false
     if M.is_type('table', v) then
@@ -56,9 +57,9 @@ end
 
 ---Dynamic `vim.validate()` wrapper which covers both legacy and newer implementations.
 --- ---
----@param T table<string, vim.validate.Spec|ValidateSpec>
+---@param T table<string, vim.validate.Spec|BooleanNvim.ValidateSpec>
 function M.validate(T)
-  local max = vim.fn.has('nvim-0.11') == 1 and 3 or 4
+  local max = vim.fn.has('nvim-0.11') == 1 and 4 or 3
   for name, spec in pairs(T) do
     while #spec > max do
       table.remove(spec, #spec)
@@ -66,18 +67,21 @@ function M.validate(T)
     T[name] = spec
   end
 
-  if vim.fn.has('nvim-0.11') ~= 1 then
+  if max == 4 then
+    ---@cast T table<string, BooleanNvim.ValidateSpec>
     vim.validate(T)
     return
   end
 
+  ---@cast T table<string, vim.validate.Spec>
   for name, spec in pairs(T) do
     table.insert(spec, 1, name)
     vim.validate(unpack(spec))
   end
 end
 
----@param T table<string|integer, any>
+---@generic T
+---@param T T
 ---@return integer len
 function M.get_dict_size(T)
   M.validate({ T = { T, { 'table' } } })
@@ -100,12 +104,13 @@ end
 ---If the data passed to the function is not a table,
 ---an error will be raised.
 --- ---
----@param T any[]
----@return any[] T
+---@generic T
+---@param T T
+---@return T T
 function M.reverse(T)
   M.validate({ T = { T, { 'table' } } })
 
-  if vim.tbl_isempty(T) then
+  if vim.tbl_isempty(T) or not vim.islist(T) then
     return T
   end
 
@@ -122,24 +127,20 @@ end
 ---@param ret? boolean Whether to return the called module
 ---@return boolean exists A boolean indicating whether the module exists or not
 ---@return unknown? module
----@overload fun(mod: string): exists: boolean
 function M.mod_exists(mod, ret)
   M.validate({
     mod = { mod, { 'string' } },
     ret = { ret, { 'boolean', 'nil' }, true },
   })
-  ret = ret ~= nil and ret or false
-
+  if ret == nil then
+    ret = false
+  end
   if mod == '' then
     return false
   end
+
   local exists, module = pcall(require, mod)
-
-  if ret then
-    return exists, module
-  end
-
-  return exists
+  return exists, ret and module or nil
 end
 
 ---Checks if a given number is type integer.
@@ -152,7 +153,9 @@ function M.is_int(num, cond)
     num = { num, { 'number' } },
     cond = { cond, { 'boolean', 'nil' }, true },
   })
-  cond = cond ~= nil and cond or true
+  if cond == nil then
+    cond = true
+  end
 
   local is_int = math.floor(num) == num and math.ceil(num) == num
   return is_int and cond
