@@ -1,4 +1,4 @@
-local Util = require('boolean.util')
+local Util = require('boolean-toggle.util')
 
 ---@class BooleanNvimOpts.Keymaps
 ---@field to_false? string|nil

@@ -1,5 +1,5 @@
-local Util = require('boolean.util')
-local Config = require('boolean.config')
+local Util = require('boolean-toggle.util')
+local Config = require('boolean-toggle.config')
 
 local valid_chars = Util.dedup(vim.split('aeflrstuAEFLRSTU', '', { trimempty = false }))
 table.sort(valid_chars)
