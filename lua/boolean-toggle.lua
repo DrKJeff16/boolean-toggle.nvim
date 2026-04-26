@@ -4,21 +4,21 @@ local Config = require('boolean-toggle.config')
 local valid_chars = Util.dedup(vim.split('aeflrstuAEFLRSTU', '', { trimempty = false }))
 local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*@-_+=\\|/<>~ ]], '', { trimempty = false })
 
----@enum BooleanNvim.ConvertToFalse
+---@enum BooleanToggle.ConvertToFalse
 local convert_to_false = {
   ['true'] = 'false',
   True = 'False',
   TRUE = 'FALSE',
 }
 
----@enum BooleanNvim.ConvertToTrue
+---@enum BooleanToggle.ConvertToTrue
 local convert_to_true = {
   ['false'] = 'true',
   False = 'True',
   FALSE = 'TRUE',
 }
 
----@enum BooleanNvim.Convert
+---@enum BooleanToggle.Convert
 local convert = {
   ['true'] = 'false',
   ['false'] = 'true',
@@ -55,10 +55,10 @@ local function get_boolean_surround(line, start_col, end_col)
   return line:sub(1, start_col - 1), line:sub(end_col + 1, line:len())
 end
 
----@class BooleanNvim
+---@class BooleanToggle
 local M = {}
 
----@param opts? BooleanNvimOpts
+---@param opts? BooleanToggleOpts
 function M.setup(opts)
   Util.validate({ opts = { opts, { 'table', 'nil' }, true } })
 

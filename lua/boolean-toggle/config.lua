@@ -1,36 +1,36 @@
 local Util = require('boolean-toggle.util')
 
----@class BooleanNvimOpts.Keymaps
+---@class BooleanToggleOpts.Keymaps
 ---@field to_false? string|nil
 ---@field to_true? string|nil
 ---@field toggle? string|nil
 
----@class BooleanNvimDefaults.Keymaps: BooleanNvimOpts.Keymaps
+---@class BooleanToggleDefaults.Keymaps: BooleanToggleOpts.Keymaps
 ---@field to_false string|nil
 ---@field to_true string|nil
 ---@field toggle string|nil
 
----@class BooleanNvimOpts
+---@class BooleanToggleOpts
 ---@field auto_write? boolean
----@field keymaps? BooleanNvimOpts.Keymaps|nil
+---@field keymaps? BooleanToggleOpts.Keymaps|nil
 
----@class BooleanNvimDefaults: BooleanNvimOpts
+---@class BooleanToggleDefaults: BooleanToggleOpts
 ---@field auto_write boolean
----@field keymaps BooleanNvimDefaults.Keymaps
+---@field keymaps BooleanToggleDefaults.Keymaps
 
----@class BooleanNvim.Config
----@field config BooleanNvimDefaults
+---@class BooleanToggle.Config
+---@field config BooleanToggleDefaults
 local M = {}
 
----@return BooleanNvimDefaults defaults
+---@return BooleanToggleDefaults defaults
 function M.get_defaults()
-  return { ---@type BooleanNvimDefaults
+  return { ---@type BooleanToggleDefaults
     auto_write = false,
     keymaps = { toggle = nil, to_false = nil, to_true = nil },
   }
 end
 
----@param opts? BooleanNvimOpts
+---@param opts? BooleanToggleOpts
 function M.setup(opts)
   Util.validate({ opts = { opts, { 'table', 'nil' }, true } })
 

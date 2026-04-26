@@ -1,11 +1,11 @@
 ---Non-legacy validation spec (>=v0.11)
----@class BooleanNvim.ValidateSpec
+---@class BooleanToggle.ValidateSpec
 ---@field [1] any
 ---@field [2] vim.validate.Validator
 ---@field [3]? boolean
 ---@field [4]? string
 
----@class BooleanNvim.Util
+---@class BooleanToggle.Util
 local M = {}
 
 ---Checks whether nvim is running on Windows.
@@ -57,7 +57,7 @@ end
 
 ---Dynamic `vim.validate()` wrapper which covers both legacy and newer implementations.
 --- ---
----@param T table<string, vim.validate.Spec|BooleanNvim.ValidateSpec>
+---@param T table<string, vim.validate.Spec|BooleanToggle.ValidateSpec>
 function M.validate(T)
   local max = vim.fn.has('nvim-0.11') == 1 and 4 or 3
   for name, spec in pairs(T) do
@@ -68,7 +68,7 @@ function M.validate(T)
   end
 
   if max == 4 then
-    ---@cast T table<string, BooleanNvim.ValidateSpec>
+    ---@cast T table<string, BooleanToggle.ValidateSpec>
     vim.validate(T)
     return
   end
