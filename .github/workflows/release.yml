@@ -27,7 +27,7 @@ jobs:
           sha512sum boolean-toggle.nvim.7z boolean-toggle.nvim.zip boolean-toggle.nvim.tar.xz boolean-toggle.nvim.7z boolean-toggle.nvim.tar.gz >| sha512sums.txt
           md5sum boolean-toggle.nvim.7z boolean-toggle.nvim.zip boolean-toggle.nvim.tar.xz boolean-toggle.nvim.7z boolean-toggle.nvim.tar.gz >| md5sums.txt
       - name: Get Release
-        uses: joutvhu/get-release@v1
+        uses: joutvhu/get-release@v1.0.3
         with:
           latest: true
           prerelease: true
