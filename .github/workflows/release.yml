@@ -19,7 +19,7 @@ jobs:
       - name: Build Project Assets
         run: |
           mkdir -pv boolean-toggle.nvim
-          cp -rv lua doc README.md CREDITS.md LICENSE Makefile boolean-toggle.nvim
+          cp -rv lua README.md LICENSE boolean-toggle.nvim
           zip -r -9 boolean-toggle.nvim.zip boolean-toggle.nvim
           tar cvJf boolean-toggle.nvim.tar.xz boolean-toggle.nvim
           tar cvzf boolean-toggle.nvim.tar.gz boolean-toggle.nvim
