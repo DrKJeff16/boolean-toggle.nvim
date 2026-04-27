@@ -91,11 +91,7 @@ function M.setup(opts)
     end
   end
 
-  vim.api.nvim_create_user_command(
-    'Bool',
-    M.cursor_toggle_boolean,
-    { desc = 'Invert Boolean Value on Cursor' }
-  )
+  vim.api.nvim_create_user_command('Bool', M.cursor_toggle_boolean, { desc = 'Invert Boolean Value on Cursor' })
 end
 
 ---@return boolean is_boolean
@@ -133,8 +129,20 @@ function M.boolean_under_cursor()
 end
 
 function M.cursor_toggle_boolean()
+  local bufnr = vim.api.nvim_get_current_buf()
   local ok, start_col, end_col = M.boolean_under_cursor()
-  if not (ok and start_col and end_col) then
+  if
+    not (
+      ok
+      and start_col
+      and end_col
+      and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
+    )
+  then
+    return
+  end
+
+  if vim.list_contains(Config.config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr })) then
     return
   end
 
@@ -161,8 +169,20 @@ function M.cursor_toggle_boolean()
 end
 
 function M.cursor_set_to_false()
+  local bufnr = vim.api.nvim_get_current_buf()
   local ok, start_col, end_col = M.boolean_under_cursor()
-  if not (ok and start_col and end_col) then
+  if
+    not (
+      ok
+      and start_col
+      and end_col
+      and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
+    )
+  then
+    return
+  end
+
+  if vim.list_contains(Config.config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr })) then
     return
   end
 
@@ -176,8 +196,7 @@ function M.cursor_set_to_false()
   local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
   if not vim.list_contains({ 't', 'T' }, line:sub(pos[2] + 1, pos[2] + 1)) then
-    pos[2] = pos[2]
-      + (line:len() > (before .. convert_to_false[current_bool] .. after):len() and -1 or 1)
+    pos[2] = pos[2] + (line:len() > (before .. convert_to_false[current_bool] .. after):len() and -1 or 1)
   end
 
   vim.api.nvim_set_current_line(before .. convert_to_false[line:sub(start_col, end_col)] .. after)
@@ -190,8 +209,20 @@ function M.cursor_set_to_false()
 end
 
 function M.cursor_set_to_true()
+  local bufnr = vim.api.nvim_get_current_buf()
   local ok, start_col, end_col = M.boolean_under_cursor()
-  if not (ok and start_col and end_col) then
+  if
+    not (
+      ok
+      and start_col
+      and end_col
+      and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
+    )
+  then
+    return
+  end
+
+  if vim.list_contains(Config.config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr })) then
     return
   end
 
@@ -205,8 +236,7 @@ function M.cursor_set_to_true()
   local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
   if not vim.list_contains({ 't', 'T' }, line:sub(pos[2] + 1, pos[2] + 1)) then
-    pos[2] = pos[2]
-      + (line:len() > (before .. convert_to_true[current_bool] .. after):len() and -1 or 1)
+    pos[2] = pos[2] + (line:len() > (before .. convert_to_true[current_bool] .. after):len() and -1 or 1)
   end
 
   vim.api.nvim_set_current_line(before .. convert_to_true[line:sub(start_col, end_col)] .. after)
@@ -217,8 +247,6 @@ function M.cursor_set_to_true()
     pcall(vim.cmd.write)
   end
 end
-
-function M.setup_keymaps() end
 
 return M
 -- vim: set ts=2 sts=2 sw=2 et ai si sta:

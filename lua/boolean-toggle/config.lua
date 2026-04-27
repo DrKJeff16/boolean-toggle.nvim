@@ -1,5 +1,3 @@
-local Util = require('boolean-toggle.util')
-
 ---@class BooleanToggleOpts.Keymaps
 ---@field to_false? string|nil
 ---@field to_true? string|nil
@@ -12,11 +10,15 @@ local Util = require('boolean-toggle.util')
 
 ---@class BooleanToggleOpts
 ---@field auto_write? boolean
+---@field ignore_ft? string[]
 ---@field keymaps? BooleanToggleOpts.Keymaps|nil
 
 ---@class BooleanToggleDefaults: BooleanToggleOpts
 ---@field auto_write boolean
+---@field ignore_ft string[]
 ---@field keymaps BooleanToggleDefaults.Keymaps
+
+local Util = require('boolean-toggle.util')
 
 ---@class BooleanToggle.Config
 ---@field config BooleanToggleDefaults
@@ -26,6 +28,7 @@ local M = {}
 function M.get_defaults()
   return { ---@type BooleanToggleDefaults
     auto_write = false,
+    ignore_ft = {},
     keymaps = { toggle = nil, to_false = nil, to_true = nil },
   }
 end

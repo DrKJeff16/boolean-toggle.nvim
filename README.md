@@ -14,6 +14,9 @@ Toggle `true` and `false` values under your cursor.
   - [`paq-nvim`](#paq-nvim)
   - [`vim.pack`](#vimpack)
   - [LuaRocks](#luarocks)
+- [Configuration](#configuration)
+  - [Defaults](#defaults)
+- [License](#license)
 
 ---
 
@@ -126,7 +129,11 @@ By default, `setup()` loads with the following options:
 
 ```lua
 {
-  auto_write = false, -- Whether to automatically save the file when a boolean is changed
+  -- Whether to automatically save the file when a boolean is changed
+  auto_write = false,
+
+  -- A list of strings with the filetypes for which this plugin will be deactivated
+  ignore_ft = {}
 
   -- Normal mode keymaps
   --
@@ -147,5 +154,9 @@ By default, `setup()` loads with the following options:
 ```
 
 ---
+
+## License
+
+[GPLv2](https://github.com/DrKJeff16/boolean-toggle.nvim/blob/main/LICENSE)
 
 <!-- vim: set ts=2 sts=2 sw=2 et ai si sta: -->
