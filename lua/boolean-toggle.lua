@@ -2,7 +2,7 @@ local Util = require('boolean-toggle.util')
 local Config = require('boolean-toggle.config')
 
 local valid_chars = Util.dedup(vim.split('aeflrstuAEFLRSTU', '', { trimempty = false }))
-local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*@-_+=\\|/<>~` ]], '', { trimempty = false })
+local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = false })
 
 ---@enum BooleanToggle.ConvertToFalse
 local convert_to_false = {
