@@ -1,0 +1,56 @@
+name: Action Release
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "v*.*.*-*"
+  merge_group:
+    branches:
+      - main
+  release:
+    types:
+      - created
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+      - name: Build Project Assets
+        run: |
+          mkdir -pv boolean-toggle.nvim
+          cp -rv lua doc README.md CREDITS.md LICENSE Makefile boolean-toggle.nvim
+          zip -r -9 boolean-toggle.nvim.zip boolean-toggle.nvim
+          tar cvJf boolean-toggle.nvim.tar.xz boolean-toggle.nvim
+          tar cvzf boolean-toggle.nvim.tar.gz boolean-toggle.nvim
+          7z a -mx9 -mmt -sdel boolean-toggle.nvim.7z boolean-toggle.nvim
+          sha512sum boolean-toggle.nvim.7z boolean-toggle.nvim.zip boolean-toggle.nvim.tar.xz boolean-toggle.nvim.7z boolean-toggle.nvim.tar.gz >| sha512sums.txt
+          md5sum boolean-toggle.nvim.7z boolean-toggle.nvim.zip boolean-toggle.nvim.tar.xz boolean-toggle.nvim.7z boolean-toggle.nvim.tar.gz >| md5sums.txt
+      - name: Get Release
+        uses: joutvhu/get-release@v1
+        with:
+          latest: true
+          prerelease: true
+          pattern: "^v.*"
+          debug: true
+          throwing: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Release File
+        run: |
+          echo ${{ github.sha }} > Release.txt
+          cat Release.txt
+      - name: Release
+        uses: softprops/action-gh-release@v3
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            Release.txt
+            md5sums.txt
+            sha512sums.txt
+            boolean-toggle.nvim.7z
+            boolean-toggle.nvim.tar.gz
+            boolean-toggle.nvim.tar.xz
+            boolean-toggle.nvim.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+# vim: set ts=2 sts=2 sw=2 et ai si sta:
