@@ -4,47 +4,42 @@ local Config = require('boolean-toggle.config')
 
 local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = false })
 
----@class BooleanToggle.ConvertToFalse
 local convert_to_false = {
-  ['true'] = 'false',
-  yes = 'no',
-  True = 'False',
-  Yes = 'No',
-  TRUE = 'FALSE',
-  YES = 'NO',
+  ['true'] = { 'false', ft = { '*' } },
+  yes = { 'no', ft = { '*' } },
+  True = { 'False', ft = { '*' } },
+  Yes = { 'No', ft = { '*' } },
+  TRUE = { 'FALSE', ft = { '*' } },
+  YES = { 'NO', ft = { '*' } },
+  ['nil'] = { 't', ft = { 'lisp' } },
 }
 
----@class BooleanToggle.ConvertLisp
-local convert_lisp = {
-  t = 'nil',
-  ['nil'] = 't',
-}
-
----@class BooleanToggle.ConvertToTrue
 local convert_to_true = {
-  ['false'] = 'true',
-  no = 'yes',
-  False = 'True',
-  No = 'Yes',
-  FALSE = 'TRUE',
-  NO = 'NO',
+  t = { 'nil', ft = { 'lisp' } },
+  ['false'] = { 'true', ft = { '*' } },
+  no = { 'yes', ft = { '*' } },
+  False = { 'True', ft = { '*' } },
+  No = { 'Yes', ft = { '*' } },
+  FALSE = { 'TRUE', ft = { '*' } },
+  NO = { 'NO', ft = { '*' } },
 }
 
----@class BooleanToggle.Convert
 local convert = {
-  FALSE = 'TRUE',
-  False = 'True',
-  NO = 'NO',
-  No = 'Yes',
-  TRUE = 'FALSE',
-  True = 'False',
-  YES = 'NO',
-  Yes = 'No',
-  ['false'] = 'true',
-  ['not'] = '',
-  ['true'] = 'false',
-  no = 'yes',
-  yes = 'no',
+  FALSE = { 'TRUE', ft = { '*' } },
+  False = { 'True', ft = { '*' } },
+  NO = { 'NO', ft = { '*' } },
+  No = { 'Yes', ft = { '*' } },
+  TRUE = { 'FALSE', ft = { '*' } },
+  True = { 'False', ft = { '*' } },
+  YES = { 'NO', ft = { '*' } },
+  Yes = { 'No', ft = { '*' } },
+  ['false'] = { 'true', ft = { '*' } },
+  ['nil'] = { 't', ft = { 'lisp' } },
+  ['not'] = { '', ft = { '*' } },
+  ['true'] = { 'false', ft = { '*' } },
+  no = { 'yes', ft = { '*' } },
+  t = { 'nil', ft = { 'lisp' } },
+  yes = { 'no', ft = { '*' } },
 }
 
 ---@param line string
@@ -64,6 +59,39 @@ end
 
 ---@class BooleanToggle
 local M = {}
+
+---@param ft? string
+---@param bool? 'true'|'false'
+---@return table<string, { [1]: string, ft: string[] }> values
+function M.get_spec_values(ft, bool)
+  Util.validate({
+    ft = { ft, { 'string', 'nil' }, true },
+    bool = { bool, { 'string', 'nil' }, true },
+  })
+  ft = ft or Util.optget('filetype', 'buf', vim.api.nvim_get_current_buf())
+  if bool and not vim.list_contains({ 'true', 'false' }, bool) then
+    error(('Invalid value `%s`'):format(bool), ERROR)
+  end
+
+  local conv = vim.deepcopy(not bool and convert or (bool == 'true' and convert_to_true or convert_to_false))
+  if vim.tbl_isempty(Config.config.custom_spec) then
+    return conv
+  end
+
+  for _, spec in ipairs(Config.config.custom_spec) do
+    local ft_spec = (not spec.ft or vim.tbl_isempty(spec.ft)) and { '*' } or spec.ft
+    if not bool then
+      conv[spec.no] = { spec.yes, ft = ft_spec }
+      conv[spec.yes] = { spec.no, ft = ft_spec }
+    elseif bool == 'true' then
+      conv[spec.no] = { spec.yes, ft = ft_spec }
+    elseif bool == 'false' then
+      conv[spec.yes] = { spec.no, ft = ft_spec }
+    end
+  end
+
+  return conv
+end
 
 ---@param opts? BooleanToggleOpts
 function M.setup(opts)
@@ -116,7 +144,7 @@ end
 ---@return boolean is_boolean
 ---@return integer|nil start_col
 ---@return integer|nil end_col
----@return table<string, string>|nil convert
+---@return table<string, { [1]: string, ft: string[] }>|nil convert
 function M.boolean_under_cursor(bool)
   Util.validate({ bool = { bool, { 'string', 'nil' }, true } })
 
@@ -135,7 +163,7 @@ function M.boolean_under_cursor(bool)
     col = col - 1
   end
 
-  local word, start_col = '', col
+  local word, start_col = '', col ---@type string, integer
   while true do
     if vim.list_contains(delim, line:sub(col, col)) or col > line:len() then
       col = col - 1
@@ -146,17 +174,20 @@ function M.boolean_under_cursor(bool)
   end
 
   local bufnr = vim.api.nvim_get_current_buf()
-  local is_lisp = Util.optget('filetype', 'buf', bufnr) == 'lisp'
+  local ft = Util.optget('filetype', 'buf', bufnr) --[[@as string]]
   local conv
   if not bool then
-    conv = vim.deepcopy(is_lisp and convert_lisp or convert)
+    conv = M.get_spec_values('ft')
   elseif bool == 'true' then
-    conv = vim.deepcopy(is_lisp and { ['nil'] = convert_lisp.t } or convert_to_true)
+    conv = M.get_spec_values('ft', 'true')
   elseif bool == 'false' then
-    conv = vim.deepcopy(is_lisp and { t = convert_lisp['nil'] } or convert_to_false)
+    conv = M.get_spec_values('ft', 'false')
   end
-  if vim.list_contains(vim.tbl_keys(conv), word) then
-    return true, start_col, col, conv
+  if conv[word] then
+    local conv_ft = conv[word].ft or {}
+    if vim.list_contains(conv_ft, ft) or vim.tbl_isempty(conv_ft) or vim.list_contains(conv_ft, '*') then
+      return true, start_col, col, conv
+    end
   end
   return false
 end
@@ -190,7 +221,7 @@ function M.cursor_toggle_boolean()
   local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
 
-  vim.api.nvim_set_current_line(before .. conv[current_bool] .. after)
+  vim.api.nvim_set_current_line(before .. conv[current_bool][1] .. after)
   pcall(vim.cmd.undojoin)
   vim.api.nvim_win_set_cursor(win, pos)
 
@@ -228,10 +259,10 @@ function M.cursor_set_to_false()
   local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
   if not vim.list_contains({ 't', 'T' }, line:sub(pos[2] + 1, pos[2] + 1)) then
-    pos[2] = pos[2] + (line:len() > (before .. conv[current_bool] .. after):len() and -1 or 1)
+    pos[2] = pos[2] + (line:len() > (before .. conv[current_bool][1] .. after):len() and -1 or 1)
   end
 
-  vim.api.nvim_set_current_line(before .. conv[line:sub(start_col, end_col)] .. after)
+  vim.api.nvim_set_current_line(before .. conv[line:sub(start_col, end_col)][1] .. after)
   pcall(vim.cmd.undojoin)
   vim.api.nvim_win_set_cursor(win, pos)
 
@@ -269,10 +300,10 @@ function M.cursor_set_to_true()
   local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
   if not vim.list_contains({ 't', 'T', 'f', 'F', 'y', 'Y', 'n', 'N' }, line:sub(pos[2] + 1, pos[2] + 1)) then
-    pos[2] = pos[2] + (line:len() > (before .. conv[current_bool] .. after):len() and -1 or 1)
+    pos[2] = pos[2] + (line:len() > (before .. conv[current_bool][1] .. after):len() and -1 or 1)
   end
 
-  vim.api.nvim_set_current_line(before .. conv[line:sub(start_col, end_col)] .. after)
+  vim.api.nvim_set_current_line(before .. conv[line:sub(start_col, end_col)][1] .. after)
   pcall(vim.cmd.undojoin)
   vim.api.nvim_win_set_cursor(win, pos)
 

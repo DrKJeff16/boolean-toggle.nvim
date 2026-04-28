@@ -15,7 +15,7 @@
 ---@field keymaps? BooleanToggleOpts.Keymaps|nil
 
 ---@class BooleanToggle.CustomSpec
----@field ft? string[]|string|nil
+---@field ft? string[]|nil
 ---@field no string
 ---@field yes string
 
