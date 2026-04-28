@@ -1,4 +1,7 @@
 name: Action Release
+permissions:
+  contents: write
+  discussions: write
 on:
   push:
     tags:
