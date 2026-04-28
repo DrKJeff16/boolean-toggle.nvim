@@ -1,7 +1,7 @@
 local Util = require('boolean-toggle.util')
 local Config = require('boolean-toggle.config')
 
-local valid_chars = Util.dedup(vim.split('aeflrstuAEFLRSTU', '', { trimempty = false }))
+local valid_chars = Util.dedup(vim.split('aeflnrstuAEFLRSTU', '', { trimempty = false }))
 local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = false })
 
 ---@enum BooleanToggle.ConvertToFalse
@@ -9,6 +9,7 @@ local convert_to_false = {
   ['true'] = 'false',
   True = 'False',
   TRUE = 'FALSE',
+  t = 'nil',
 }
 
 ---@enum BooleanToggle.ConvertToTrue
@@ -16,6 +17,7 @@ local convert_to_true = {
   ['false'] = 'true',
   False = 'True',
   FALSE = 'TRUE',
+  ['nil'] = 't',
 }
 
 ---@enum BooleanToggle.Convert
@@ -26,6 +28,8 @@ local convert = {
   False = 'True',
   TRUE = 'FALSE',
   FALSE = 'TRUE',
+  t = 'nil',
+  ['nil'] = 't',
 }
 
 ---@param line string
@@ -122,6 +126,10 @@ function M.boolean_under_cursor()
     col = col + 1
   end
 
+  local bufnr = vim.api.nvim_get_current_buf()
+  if vim.list_contains({ 't', 'nil' }, word) and Util.optget('filetype', 'buf', bufnr) == 'lisp' then
+    return true, start_col, col
+  end
   if vim.list_contains({ 'false', 'true', 'False', 'True', 'FALSE', 'TRUE' }, word) then
     return true, start_col, col
   end
@@ -155,7 +163,7 @@ function M.cursor_toggle_boolean()
   local win = vim.api.nvim_get_current_win()
   local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
-  if not vim.list_contains({ 'f', 'F', 't', 'T' }, line:sub(pos[2] + 1, pos[2] + 1)) then
+  if not vim.list_contains({ 'f', 'F', 't', 'T', 'n' }, line:sub(pos[2] + 1, pos[2] + 1)) then
     pos[2] = pos[2] + (line:len() > (before .. convert[current_bool] .. after):len() and -1 or 1)
   end
 
