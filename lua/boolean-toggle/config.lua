@@ -10,11 +10,18 @@
 
 ---@class BooleanToggleOpts
 ---@field auto_write? boolean
+---@field custom_spec? BooleanToggle.CustomSpec[]
 ---@field ignore_ft? string[]
 ---@field keymaps? BooleanToggleOpts.Keymaps|nil
 
+---@class BooleanToggle.CustomSpec
+---@field ft? string[]|string|nil
+---@field no string
+---@field yes string
+
 ---@class BooleanToggleDefaults: BooleanToggleOpts
 ---@field auto_write boolean
+---@field custom_spec BooleanToggle.CustomSpec[]
 ---@field ignore_ft string[]
 ---@field keymaps BooleanToggleDefaults.Keymaps
 
@@ -28,6 +35,7 @@ local M = {}
 function M.get_defaults()
   return { ---@type BooleanToggleDefaults
     auto_write = true,
+    custom_spec = {},
     ignore_ft = {},
     keymaps = { toggle = nil, to_false = nil, to_true = nil },
   }

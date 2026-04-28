@@ -1,10 +1,10 @@
+local ERROR = vim.log.levels.ERROR
 local Util = require('boolean-toggle.util')
 local Config = require('boolean-toggle.config')
 
-local valid_chars = Util.dedup(vim.split('aeflnrstuAEFLRSTU', '', { trimempty = false }))
 local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = false })
 
----@enum BooleanToggle.ConvertToFalse
+---@class BooleanToggle.ConvertToFalse
 local convert_to_false = {
   ['true'] = 'false',
   yes = 'no',
@@ -14,12 +14,13 @@ local convert_to_false = {
   YES = 'NO',
 }
 
+---@class BooleanToggle.ConvertLisp
 local convert_lisp = {
   t = 'nil',
   ['nil'] = 't',
 }
 
----@enum BooleanToggle.ConvertToTrue
+---@class BooleanToggle.ConvertToTrue
 local convert_to_true = {
   ['false'] = 'true',
   no = 'yes',
@@ -29,7 +30,7 @@ local convert_to_true = {
   NO = 'NO',
 }
 
----@enum BooleanToggle.Convert
+---@class BooleanToggle.Convert
 local convert = {
   FALSE = 'TRUE',
   False = 'True',
@@ -45,18 +46,6 @@ local convert = {
   no = 'yes',
   yes = 'no',
 }
-
----@param line string
----@param col integer
----@return boolean valid
-local function is_valid_char(line, col)
-  Util.validate({
-    line = { line, { 'string' } },
-    col = { col, { 'number' } },
-  })
-
-  return vim.list_contains(valid_chars, line:sub(col, col))
-end
 
 ---@param line string
 ---@param start_col integer
@@ -109,19 +98,35 @@ function M.setup(opts)
     end
   end
 
+  if Config.config.custom_spec and not vim.tbl_isempty(Config.config.custom_spec) then
+    for _, spec in ipairs(Config.config.custom_spec) do
+      if not (spec.yes and spec.no) then
+        vim.notify(
+          ('Spec is missing either its `yes` and/or `no` values\nyes: `%s`'):format(spec.yes or '', spec.no or ''),
+          ERROR
+        )
+      end
+    end
+  end
+
   vim.api.nvim_create_user_command('Bool', M.cursor_toggle_boolean, { desc = 'Invert Boolean Value on Cursor' })
 end
 
+---@param bool? 'true'|'false'
 ---@return boolean is_boolean
 ---@return integer|nil start_col
 ---@return integer|nil end_col
-function M.boolean_under_cursor()
+---@return table<string, string>|nil convert
+function M.boolean_under_cursor(bool)
+  Util.validate({ bool = { bool, { 'string', 'nil' }, true } })
+
   local pos = vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win())
   local line = vim.api.nvim_get_current_line()
   local col = pos[2] + 1
-  if not is_valid_char(line, col) then
+  if vim.list_contains(delim, line:sub(col, col)) then
     return false
   end
+
   while col > 0 do
     if vim.list_contains(delim, line:sub(col, col)) or col <= 0 then
       col = col + 1
@@ -141,23 +146,30 @@ function M.boolean_under_cursor()
   end
 
   local bufnr = vim.api.nvim_get_current_buf()
-  if vim.list_contains({ 't', 'nil' }, word) and Util.optget('filetype', 'buf', bufnr) == 'lisp' then
-    return true, start_col, col
+  local is_lisp = Util.optget('filetype', 'buf', bufnr) == 'lisp'
+  local conv
+  if not bool then
+    conv = vim.deepcopy(is_lisp and convert_lisp or convert)
+  elseif bool == 'true' then
+    conv = vim.deepcopy(is_lisp and { ['nil'] = convert_lisp.t } or convert_to_true)
+  elseif bool == 'false' then
+    conv = vim.deepcopy(is_lisp and { t = convert_lisp['nil'] } or convert_to_false)
   end
-  if vim.list_contains(vim.tbl_keys(convert), word) then
-    return true, start_col, col
+  if vim.list_contains(vim.tbl_keys(conv), word) then
+    return true, start_col, col, conv
   end
   return false
 end
 
 function M.cursor_toggle_boolean()
   local bufnr = vim.api.nvim_get_current_buf()
-  local ok, start_col, end_col = M.boolean_under_cursor()
+  local ok, start_col, end_col, conv = M.boolean_under_cursor()
   if
     not (
       ok
       and start_col
       and end_col
+      and conv
       and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
     )
   then
@@ -170,18 +182,15 @@ function M.cursor_toggle_boolean()
 
   local line = vim.api.nvim_get_current_line()
   local current_bool = line:sub(start_col, end_col)
-  if not convert[current_bool] then
+  if not conv[current_bool] then
     return
   end
 
   local win = vim.api.nvim_get_current_win()
   local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
-  if not vim.list_contains({ 'f', 'F', 't', 'T', 'n' }, line:sub(pos[2] + 1, pos[2] + 1)) then
-    pos[2] = pos[2] + (line:len() > (before .. convert[current_bool] .. after):len() and -1 or 1)
-  end
 
-  vim.api.nvim_set_current_line(before .. convert[current_bool] .. after)
+  vim.api.nvim_set_current_line(before .. conv[current_bool] .. after)
   pcall(vim.cmd.undojoin)
   vim.api.nvim_win_set_cursor(win, pos)
 
@@ -192,12 +201,13 @@ end
 
 function M.cursor_set_to_false()
   local bufnr = vim.api.nvim_get_current_buf()
-  local ok, start_col, end_col = M.boolean_under_cursor()
+  local ok, start_col, end_col, conv = M.boolean_under_cursor('false')
   if
     not (
       ok
       and start_col
       and end_col
+      and conv
       and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
     )
   then
@@ -210,7 +220,7 @@ function M.cursor_set_to_false()
 
   local line = vim.api.nvim_get_current_line()
   local current_bool = line:sub(start_col, end_col)
-  if not convert_to_false[current_bool] then
+  if not conv[current_bool] then
     return
   end
 
@@ -218,10 +228,10 @@ function M.cursor_set_to_false()
   local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
   if not vim.list_contains({ 't', 'T' }, line:sub(pos[2] + 1, pos[2] + 1)) then
-    pos[2] = pos[2] + (line:len() > (before .. convert_to_false[current_bool] .. after):len() and -1 or 1)
+    pos[2] = pos[2] + (line:len() > (before .. conv[current_bool] .. after):len() and -1 or 1)
   end
 
-  vim.api.nvim_set_current_line(before .. convert_to_false[line:sub(start_col, end_col)] .. after)
+  vim.api.nvim_set_current_line(before .. conv[line:sub(start_col, end_col)] .. after)
   pcall(vim.cmd.undojoin)
   vim.api.nvim_win_set_cursor(win, pos)
 
@@ -232,12 +242,13 @@ end
 
 function M.cursor_set_to_true()
   local bufnr = vim.api.nvim_get_current_buf()
-  local ok, start_col, end_col = M.boolean_under_cursor()
+  local ok, start_col, end_col, conv = M.boolean_under_cursor('true')
   if
     not (
       ok
       and start_col
       and end_col
+      and conv
       and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
     )
   then
@@ -250,18 +261,18 @@ function M.cursor_set_to_true()
 
   local line = vim.api.nvim_get_current_line()
   local current_bool = line:sub(start_col, end_col)
-  if not convert_to_true[current_bool] then
+  if not conv[current_bool] then
     return
   end
 
   local win = vim.api.nvim_get_current_win()
   local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
-  if not vim.list_contains({ 't', 'T', 'f', 'F', 'y', 'Y', 'n' }, line:sub(pos[2] + 1, pos[2] + 1)) then
-    pos[2] = pos[2] + (line:len() > (before .. convert_to_true[current_bool] .. after):len() and -1 or 1)
+  if not vim.list_contains({ 't', 'T', 'f', 'F', 'y', 'Y', 'n', 'N' }, line:sub(pos[2] + 1, pos[2] + 1)) then
+    pos[2] = pos[2] + (line:len() > (before .. conv[current_bool] .. after):len() and -1 or 1)
   end
 
-  vim.api.nvim_set_current_line(before .. convert_to_true[line:sub(start_col, end_col)] .. after)
+  vim.api.nvim_set_current_line(before .. conv[line:sub(start_col, end_col)] .. after)
   pcall(vim.cmd.undojoin)
   vim.api.nvim_win_set_cursor(win, pos)
 
