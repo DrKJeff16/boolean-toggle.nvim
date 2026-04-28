@@ -3,7 +3,7 @@ on:
   push:
     tags:
       - "v*.*.*"
-      - "v*.*.*-*"
+      - "v*.*.*-.*"
   merge_group:
     branches:
       - main
@@ -44,6 +44,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         if: github.ref_type == 'tag'
         with:
+          generate_release_notes: true
           files: |
             Release.txt
             md5sums.txt
@@ -52,5 +53,4 @@ jobs:
             boolean-toggle.nvim.tar.gz
             boolean-toggle.nvim.tar.xz
             boolean-toggle.nvim.zip
-          token: ${{ secrets.GITHUB_TOKEN }}
 # vim: set ts=2 sts=2 sw=2 et ai si sta:
