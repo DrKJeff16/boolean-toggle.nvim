@@ -18,6 +18,8 @@ https://github.com/user-attachments/assets/b3f7124a-736e-425c-9c08-f3e0504c238f
   - [LuaRocks](#luarocks)
 - [Configuration](#configuration)
   - [Defaults](#defaults)
+- [Usage](#usage)
+  - [Keymaps](#keymaps)
 - [License](#license)
 
 ---
@@ -135,7 +137,7 @@ By default, `setup()` loads with the following options:
   auto_write = false,
 
   -- A list of strings with the filetypes for which this plugin will be deactivated
-  ignore_ft = {}
+  ignore_ft = {},
 
   -- Normal mode keymaps
   --
@@ -154,6 +156,47 @@ By default, `setup()` loads with the following options:
   },
 }
 ```
+
+---
+
+## Usage
+
+You must place your cursor at any character of the boolean value. Supported boolean words are:
+
+- `true` / `false`
+- `True` / `False`
+- `TRUE` / `FALSE`
+
+### Keymaps
+
+You can use a Normal mode keymap, either created in `setup()` or manually (read below).
+
+<details>
+<summary>Through setup</summary>
+
+```lua
+-- THIS IS JUST AN EXAMPLE, MODIFY AT WILL.
+-- TO DISABLE ONE OF THE KEYMAPS, SET THEM TO `nil`
+require('boolean-toggle').setup({
+  keymaps = {
+    toggle = '<CR>', -- Toggle on ENTER
+    to_false = '<BS>', -- Set to `false` by pressing Backspace
+    to_true = '<C-BS>', -- Set to `false` by pressing CTRL + Backspace
+  },
+})
+```
+
+</details>
+<details>
+<summary>Manually</summary>
+
+| Function                                            | Description                     | `setup()` Option  |
+|-----------------------------------------------------|---------------------------------|-------------------|
+| `require('boolean-toggle').cursor_toggle_boolean()` | Toggles between boolean values. | `keymap.toggle`   |
+| `require('boolean-toggle').cursor_set_to_true()`    | Sets boolean to `true`.         | `keymap.to_false` |
+| `require('boolean-toggle').cursor_set_to_false()`   | Sets boolean to `false`.        | `keymap.to_true`  |
+
+</details>
 
 ---
 
