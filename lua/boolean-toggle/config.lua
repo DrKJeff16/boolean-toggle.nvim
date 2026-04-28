@@ -27,7 +27,7 @@ local M = {}
 ---@return BooleanToggleDefaults defaults
 function M.get_defaults()
   return { ---@type BooleanToggleDefaults
-    auto_write = false,
+    auto_write = true,
     ignore_ft = {},
     keymaps = { toggle = nil, to_false = nil, to_true = nil },
   }

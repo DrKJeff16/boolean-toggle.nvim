@@ -134,7 +134,7 @@ By default, `setup()` loads with the following options:
 ```lua
 {
   -- Whether to automatically save the file when a boolean is changed
-  auto_write = false,
+  auto_write = true,
 
   -- A list of strings with the filetypes for which this plugin will be deactivated
   ignore_ft = {},
