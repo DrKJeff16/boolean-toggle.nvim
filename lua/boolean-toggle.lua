@@ -7,29 +7,43 @@ local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = 
 ---@enum BooleanToggle.ConvertToFalse
 local convert_to_false = {
   ['true'] = 'false',
+  yes = 'no',
   True = 'False',
+  Yes = 'No',
   TRUE = 'FALSE',
+  YES = 'NO',
+}
+
+local convert_lisp = {
   t = 'nil',
+  ['nil'] = 't',
 }
 
 ---@enum BooleanToggle.ConvertToTrue
 local convert_to_true = {
   ['false'] = 'true',
+  no = 'yes',
   False = 'True',
+  No = 'Yes',
   FALSE = 'TRUE',
-  ['nil'] = 't',
+  NO = 'NO',
 }
 
 ---@enum BooleanToggle.Convert
 local convert = {
-  ['true'] = 'false',
-  ['false'] = 'true',
-  True = 'False',
-  False = 'True',
-  TRUE = 'FALSE',
   FALSE = 'TRUE',
-  t = 'nil',
-  ['nil'] = 't',
+  False = 'True',
+  NO = 'NO',
+  No = 'Yes',
+  TRUE = 'FALSE',
+  True = 'False',
+  YES = 'NO',
+  Yes = 'No',
+  ['false'] = 'true',
+  ['not'] = '',
+  ['true'] = 'false',
+  no = 'yes',
+  yes = 'no',
 }
 
 ---@param line string
@@ -130,7 +144,7 @@ function M.boolean_under_cursor()
   if vim.list_contains({ 't', 'nil' }, word) and Util.optget('filetype', 'buf', bufnr) == 'lisp' then
     return true, start_col, col
   end
-  if vim.list_contains({ 'false', 'true', 'False', 'True', 'FALSE', 'TRUE' }, word) then
+  if vim.list_contains(vim.tbl_keys(convert), word) then
     return true, start_col, col
   end
   return false
@@ -243,7 +257,7 @@ function M.cursor_set_to_true()
   local win = vim.api.nvim_get_current_win()
   local pos = vim.api.nvim_win_get_cursor(win)
   local before, after = get_boolean_surround(line, start_col, end_col)
-  if not vim.list_contains({ 't', 'T' }, line:sub(pos[2] + 1, pos[2] + 1)) then
+  if not vim.list_contains({ 't', 'T', 'f', 'F', 'y', 'Y', 'n' }, line:sub(pos[2] + 1, pos[2] + 1)) then
     pos[2] = pos[2] + (line:len() > (before .. convert_to_true[current_bool] .. after):len() and -1 or 1)
   end
 
