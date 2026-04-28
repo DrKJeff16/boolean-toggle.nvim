@@ -67,7 +67,7 @@ function M.validate(T)
     T[name] = spec
   end
 
-  if max == 4 then
+  if max == 3 then
     ---@cast T table<string, BooleanToggle.ValidateSpec>
     vim.validate(T)
     return
