@@ -9,13 +9,6 @@ https://github.com/user-attachments/assets/b3f7124a-736e-425c-9c08-f3e0504c238f
 ## Table of Contents
 
 - [Installation](#installation)
-  - [`vim-plug`](#vim-plug)
-  - [`lazy.nvim`](#lazynvim)
-  - [`pckr.nvim`](#pckrnvim)
-  - [`nvim-plug`](#nvim-plug)
-  - [`paq-nvim`](#paq-nvim)
-  - [`vim.pack`](#vimpack)
-  - [LuaRocks](#luarocks)
 - [Configuration](#configuration)
   - [Defaults](#defaults)
 - [Usage](#usage)
@@ -34,7 +27,8 @@ please raise a [**_BLANK ISSUE_**](https://github.com/DrKJeff16/boolean-toggle.n
 
 Use any plugin manager of your choosing.
 
-### `vim-plug`
+<details>
+<summary>vim-plug</summary>
 
 ```vim
 if has('nvim-0.11')
@@ -46,7 +40,9 @@ if has('nvim-0.11')
 endif
 ```
 
-### `lazy.nvim`
+</details>
+<details>
+<summary>lazy.nvim</summary>
 
 ```lua
 {
@@ -65,7 +61,9 @@ If you wish to lazy-load this plugin:
 }
 ```
 
-### `pckr.nvim`
+</details>
+<details>
+<summary>pckr.nvim</summary>
 
 ```lua
 require('pckr').add({
@@ -78,7 +76,9 @@ require('pckr').add({
 })
 ```
 
-### `nvim-plug`
+</details>
+<details>
+<summary>nvim-plug</summary>
 
 ```lua
 require('plug').add({
@@ -91,14 +91,18 @@ require('plug').add({
 })
 ```
 
-### `paq-nvim`
+</details>
+<details>
+<summary>paq-nvim</summary>
 
 ```lua
 local paq = require('paq')
 paq({ 'DrKJeff16/boolean-toggle.nvim' })
 ```
 
-### `vim.pack`
+</details>
+<details>
+<summary>vim.pack</summary>
 
 ```lua
 vim.pack.add({
@@ -106,7 +110,9 @@ vim.pack.add({
 })
 ```
 
-### LuaRocks
+</details>
+<details>
+<summary>LuaRocks</summary>
 
 The package can be found [in the LuaRocks webpage](https://luarocks.org/modules/drkjeff16/boolean-toggle.nvim).
 
@@ -114,6 +120,8 @@ The package can be found [in the LuaRocks webpage](https://luarocks.org/modules/
 luarocks install boolean-toggle.nvim # Global install
 luarocks install --local boolean-toggle.nvim # Local install
 ```
+
+</details>
 
 ---
 
