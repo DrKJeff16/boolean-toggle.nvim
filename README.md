@@ -132,12 +132,14 @@ You can find these in [`config.lua`](https://github.com/DrKJeff16/boolean-toggle
 By default, `setup()` loads with the following options:
 
 ```lua
-{
+require('boolean-toggle').setup({
   -- Whether to automatically save the file when a boolean is changed
   auto_write = true,
 
   -- A list of strings with the filetypes for which this plugin will be deactivated
   ignore_ft = {},
+
+  custom_spec = {}, -- Read the Custom Spec section below
 
   -- Normal mode keymaps
   --
@@ -154,7 +156,33 @@ By default, `setup()` loads with the following options:
     -- to_false = '<KEYMAP>',
     -- to_true = '<KEYMAP>',
   },
-}
+})
+```
+
+### Custom Spec
+
+You can set your own custom boolean pairs with the `custom_spec` option. For example:
+
+```lua
+require('boolean-toggle').setup({
+  custom_spec = {
+    {
+      yes = 'foo',
+      no = 'bar',
+      ft = { '*' }, -- Setting a `*` means all filetypes will be able to be operated on
+    },
+    {
+      yes = 'Foo',
+      no = 'Bar',
+      ft = nil, -- Setting a `nil` is the same as above
+    },
+    {
+      yes = '1',
+      no = '0',
+      ft = { 'c', 'cpp' }, -- Only works for C/C++ filetypes
+    },
+  },
+})
 ```
 
 ---

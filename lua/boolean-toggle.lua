@@ -4,26 +4,33 @@ local Config = require('boolean-toggle.config')
 
 local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = false })
 
+---@class BooleanToggle.ConvertSpec
+---@field [1] string
+---@field ft? string[]|nil
+
+---@type table<string, BooleanToggle.ConvertSpec>
 local convert_to_false = {
+  TRUE = { 'FALSE', ft = { '*' } },
+  True = { 'False', ft = { '*' } },
+  YES = { 'NO', ft = { '*' } },
+  Yes = { 'No', ft = { '*' } },
+  ['nil'] = { 't', ft = { 'lisp' } },
   ['true'] = { 'false', ft = { '*' } },
   yes = { 'no', ft = { '*' } },
-  True = { 'False', ft = { '*' } },
-  Yes = { 'No', ft = { '*' } },
-  TRUE = { 'FALSE', ft = { '*' } },
-  YES = { 'NO', ft = { '*' } },
-  ['nil'] = { 't', ft = { 'lisp' } },
 }
 
+---@type table<string, BooleanToggle.ConvertSpec>
 local convert_to_true = {
-  t = { 'nil', ft = { 'lisp' } },
+  FALSE = { 'TRUE', ft = { '*' } },
+  False = { 'True', ft = { '*' } },
+  NO = { 'NO', ft = { '*' } },
+  No = { 'Yes', ft = { '*' } },
   ['false'] = { 'true', ft = { '*' } },
   no = { 'yes', ft = { '*' } },
-  False = { 'True', ft = { '*' } },
-  No = { 'Yes', ft = { '*' } },
-  FALSE = { 'TRUE', ft = { '*' } },
-  NO = { 'NO', ft = { '*' } },
+  t = { 'nil', ft = { 'lisp' } },
 }
 
+---@type table<string, BooleanToggle.ConvertSpec>
 local convert = {
   FALSE = { 'TRUE', ft = { '*' } },
   False = { 'True', ft = { '*' } },
@@ -35,7 +42,6 @@ local convert = {
   Yes = { 'No', ft = { '*' } },
   ['false'] = { 'true', ft = { '*' } },
   ['nil'] = { 't', ft = { 'lisp' } },
-  ['not'] = { '', ft = { '*' } },
   ['true'] = { 'false', ft = { '*' } },
   no = { 'yes', ft = { '*' } },
   t = { 'nil', ft = { 'lisp' } },
@@ -79,6 +85,12 @@ function M.get_spec_values(ft, bool)
   end
 
   for _, spec in ipairs(Config.config.custom_spec) do
+    Util.validate({
+      ['spec.yes'] = { spec.yes, { 'string' } },
+      ['spec.no'] = { spec.no, { 'string' } },
+      ['spec.ft'] = { spec.ft, { 'table', 'nil' }, true },
+    })
+
     local ft_spec = (not spec.ft or vim.tbl_isempty(spec.ft)) and { '*' } or spec.ft
     if not bool then
       conv[spec.no] = { spec.yes, ft = ft_spec }
@@ -137,7 +149,11 @@ function M.setup(opts)
     end
   end
 
-  vim.api.nvim_create_user_command('Bool', M.cursor_toggle_boolean, { desc = 'Invert Boolean Value on Cursor' })
+  vim.api.nvim_create_user_command(
+    'Bool',
+    M.cursor_toggle_boolean,
+    { desc = 'Invert Boolean Value on Cursor', nargs = 0 }
+  )
 end
 
 ---@param bool? 'true'|'false'
@@ -147,6 +163,9 @@ end
 ---@return table<string, { [1]: string, ft: string[] }>|nil convert
 function M.boolean_under_cursor(bool)
   Util.validate({ bool = { bool, { 'string', 'nil' }, true } })
+  if bool and not vim.list_contains({ 'true', 'false' }, bool) then
+    error(('Invalid value `%s`'):format(bool), ERROR)
+  end
 
   local pos = vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win())
   local line = vim.api.nvim_get_current_line()
@@ -183,11 +202,13 @@ function M.boolean_under_cursor(bool)
   elseif bool == 'false' then
     conv = M.get_spec_values('ft', 'false')
   end
-  if conv[word] then
-    local conv_ft = conv[word].ft or {}
-    if vim.list_contains(conv_ft, ft) or vim.tbl_isempty(conv_ft) or vim.list_contains(conv_ft, '*') then
-      return true, start_col, col, conv
-    end
+  if not conv[word] then
+    return false
+  end
+
+  local conv_ft = conv[word].ft or { '*' }
+  if vim.list_contains(conv_ft, ft) or vim.tbl_isempty(conv_ft) or vim.list_contains(conv_ft, '*') then
+    return true, start_col, col, conv
   end
   return false
 end
@@ -240,12 +261,8 @@ function M.cursor_set_to_false()
       and end_col
       and conv
       and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
-    )
+    ) or vim.list_contains(Config.config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr }))
   then
-    return
-  end
-
-  if vim.list_contains(Config.config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr })) then
     return
   end
 
