@@ -223,12 +223,8 @@ function M.cursor_toggle_boolean()
       and end_col
       and conv
       and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
-    )
+    ) or vim.list_contains(Config.config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr }))
   then
-    return
-  end
-
-  if vim.list_contains(Config.config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr })) then
     return
   end
 
@@ -298,12 +294,8 @@ function M.cursor_set_to_true()
       and end_col
       and conv
       and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
-    )
+    ) or vim.list_contains(Config.config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr }))
   then
-    return
-  end
-
-  if vim.list_contains(Config.config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr })) then
     return
   end
 
