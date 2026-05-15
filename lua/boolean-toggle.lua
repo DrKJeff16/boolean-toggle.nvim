@@ -10,12 +10,15 @@ local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = 
 
 ---@type table<string, BooleanToggle.ConvertSpec>
 local convert_to_false = {
+  ON = { 'OFF', ft = { '*' } },
+  On = { 'Off', ft = { '*' } },
   TRUE = { 'FALSE', ft = { '*' } },
   True = { 'False', ft = { '*' } },
   YES = { 'NO', ft = { '*' } },
   Yes = { 'No', ft = { '*' } },
   ['nil'] = { 't', ft = { 'lisp' } },
   ['true'] = { 'false', ft = { '*' } },
+  on = { 'off', ft = { '*' } },
   yes = { 'no', ft = { '*' } },
 }
 
@@ -25,8 +28,11 @@ local convert_to_true = {
   False = { 'True', ft = { '*' } },
   NO = { 'NO', ft = { '*' } },
   No = { 'Yes', ft = { '*' } },
+  OFF = { 'ON', ft = { '*' } },
+  Off = { 'On', ft = { '*' } },
   ['false'] = { 'true', ft = { '*' } },
   no = { 'yes', ft = { '*' } },
+  off = { 'on', ft = { '*' } },
   t = { 'nil', ft = { 'lisp' } },
 }
 
@@ -36,6 +42,10 @@ local convert = {
   False = { 'True', ft = { '*' } },
   NO = { 'NO', ft = { '*' } },
   No = { 'Yes', ft = { '*' } },
+  OFF = { 'ON', ft = { '*' } },
+  ON = { 'OFF', ft = { '*' } },
+  Off = { 'On', ft = { '*' } },
+  On = { 'Off', ft = { '*' } },
   TRUE = { 'FALSE', ft = { '*' } },
   True = { 'False', ft = { '*' } },
   YES = { 'NO', ft = { '*' } },
@@ -44,6 +54,8 @@ local convert = {
   ['nil'] = { 't', ft = { 'lisp' } },
   ['true'] = { 'false', ft = { '*' } },
   no = { 'yes', ft = { '*' } },
+  off = { 'on', ft = { '*' } },
+  on = { 'off', ft = { '*' } },
   t = { 'nil', ft = { 'lisp' } },
   yes = { 'no', ft = { '*' } },
 }
