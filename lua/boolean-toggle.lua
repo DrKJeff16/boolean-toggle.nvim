@@ -76,6 +76,8 @@ local function get_boolean_surround(line, start_col, end_col)
 end
 
 ---@class BooleanToggle
+---@field config BooleanToggle.Config
+---@field util BooleanToggle.Util
 local M = {}
 
 ---@param ft? string
@@ -333,5 +335,14 @@ function M.cursor_set_to_true()
   end
 end
 
-return M
+local BooleanToggle = setmetatable(M, {
+  __index = function(self, k)
+    if Util.mod_exists('boolean-toggle.' .. k) then
+      return require('boolean-toggle.' .. k)
+    end
+    return rawget(self, k) or nil
+  end,
+})
+
+return BooleanToggle
 -- vim: set ts=2 sts=2 sw=2 et ai si sta:
