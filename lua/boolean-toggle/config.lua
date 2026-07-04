@@ -28,8 +28,15 @@
 local Util = require('boolean-toggle.util')
 
 ---@class BooleanToggle.Config
----@field config BooleanToggleDefaults
 local M = {}
+
+---@diagnostic disable-next-line:missing-fields
+local config = {} ---@type BooleanToggleDefaults
+
+---@return BooleanToggleDefaults config
+function M.get()
+  return config
+end
 
 ---@return BooleanToggleDefaults defaults
 function M.get_defaults()
@@ -46,11 +53,11 @@ function M.setup(opts)
   Util.validate({ opts = { opts, { 'table', 'nil' }, true } })
 
   local defaults = M.get_defaults()
-  M.config = vim.tbl_deep_extend('keep', opts or {}, defaults)
+  config = vim.tbl_deep_extend('keep', opts or {}, defaults)
 
-  for k in pairs(M.config) do
+  for k in pairs(config) do
     if not defaults[k] then
-      M.config[k] = nil
+      config[k] = nil
     end
   end
   vim.g.boolean_nvim_setup = 1
