@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.4.0-1](https://github.com/DrKJeff16/boolean-toggle.nvim/tree/v0.4.0-1) (2026-07-04)
+
+[Full Changelog](https://github.com/DrKJeff16/boolean-toggle.nvim/compare/v0.3.1-1...v0.4.0-1)
+
 ## [v0.3.1-1](https://github.com/DrKJeff16/boolean-toggle.nvim/tree/v0.3.1-1) (2026-04-28)
 
 [Full Changelog](https://github.com/DrKJeff16/boolean-toggle.nvim/compare/v0.3.0-1...v0.3.1-1)
