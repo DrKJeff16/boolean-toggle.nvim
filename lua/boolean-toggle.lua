@@ -129,10 +129,35 @@ function M.setup(opts)
     vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorHold' }, {
       group = vim.api.nvim_create_augroup('boolean_toggle', { clear = true }),
       callback = function(ev)
+        if
+          vim.list_contains({
+            'NvimTree',
+            'TelescopePrompt',
+            'TelescopeResults',
+            'fzf',
+            'lazy',
+            'markdown',
+            'neo-tree',
+            'qf',
+            'snacks_picker_input',
+          }, Util.optget('filetype', 'buf', ev.buf))
+          or vim.list_contains({
+            'help',
+            'nofile',
+            'nowrite',
+            'quickfix',
+            'terminal',
+          }, Util.optget('buftype', 'buf', ev.buf))
+        then
+          return
+        end
+
         if Config.get().keymaps.toggle and Config.get().keymaps.toggle ~= '' then
-          if not M.boolean_under_cursor() then
+          if not M.boolean_under_cursor() and vim.g.boolean_toggle_toggle_keymap == 1 then
             pcall(vim.keymap.del, 'n', Config.get().keymaps.toggle, { buf = ev.buf })
-          else
+            vim.g.boolean_toggle_toggle_keymap = 0
+          elseif M.boolean_under_cursor() then
+            vim.g.boolean_toggle_toggle_keymap = 1
             vim.keymap.set('n', Config.get().keymaps.toggle, M.cursor_toggle_boolean, {
               desc = 'Invert Boolean Value on Cursor',
               buf = ev.buf,
@@ -140,13 +165,15 @@ function M.setup(opts)
           end
         end
         if Config.get().keymaps.to_false and Config.get().keymaps.to_false ~= '' then
-          if not M.boolean_under_cursor('true') then
+          if not M.boolean_under_cursor('true') and vim.g.boolean_toggle_to_false_keymap == 1 then
             pcall(vim.keymap.del, 'n', Config.get().keymaps.to_false, { buf = ev.buf })
-          else
+            vim.g.boolean_toggle_to_false_keymap = 0
+          elseif M.boolean_under_cursor('true') then
             vim.keymap.set('n', Config.get().keymaps.to_false, M.cursor_set_to_false, {
               desc = 'Set Boolean on Cursor to `false`',
               buf = ev.buf,
             })
+            vim.g.boolean_toggle_to_false_keymap = 1
           end
         end
         if Config.get().keymaps.to_true and Config.get().keymaps.to_true ~= '' then
