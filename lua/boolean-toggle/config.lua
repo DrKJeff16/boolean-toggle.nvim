@@ -1,21 +1,21 @@
 ---@class BooleanToggleOpts.Keymaps
----@field to_false? string|nil
----@field to_true? string|nil
----@field toggle? string|nil
+---@field to_false? string
+---@field to_true? string
+---@field toggle? string
 
 ---@class BooleanToggleDefaults.Keymaps: BooleanToggleOpts.Keymaps
----@field to_false string|nil
----@field to_true string|nil
----@field toggle string|nil
+---@field to_false? string
+---@field to_true? string
+---@field toggle? string
 
 ---@class BooleanToggleOpts
 ---@field auto_write? boolean
 ---@field custom_spec? BooleanToggle.CustomSpec[]
 ---@field ignore_ft? string[]
----@field keymaps? BooleanToggleOpts.Keymaps|nil
+---@field keymaps? BooleanToggleOpts.Keymaps
 
 ---@class BooleanToggle.CustomSpec
----@field ft? string[]|nil
+---@field ft? string[]
 ---@field no string
 ---@field yes string
 

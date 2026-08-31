@@ -96,7 +96,7 @@ end
 ---If the data passed to the function is not a table,
 ---an error will be raised.
 --- ---
----@generic T
+---@generic T:table
 ---@param T T
 ---@return T NT
 function M.dedup(T)
@@ -144,13 +144,12 @@ function M.validate(T)
   if max == 3 then
     ---@cast T table<string, BooleanToggle.ValidateSpec>
     vim.validate(T)
-    return
-  end
-
-  ---@cast T table<string, vim.validate.Spec>
-  for name, spec in pairs(T) do
-    table.insert(spec, 1, name)
-    vim.validate(unpack(spec))
+  else
+    ---@cast T table<string, vim.validate.Spec>
+    for name, spec in pairs(T) do
+      table.insert(spec, 1, name)
+      vim.validate(unpack(spec))
+    end
   end
 end
 
@@ -160,12 +159,8 @@ end
 function M.get_dict_size(T)
   M.validate({ T = { T, { 'table' } } })
 
-  if vim.tbl_isempty(T) then
-    return 0
-  end
-
   local len = 0
-  for _, _ in pairs(T) do
+  for _ in pairs(T) do
     len = len + 1
   end
   return len
@@ -283,20 +278,16 @@ function M.lstrip(char, str)
     return str
   end
 
-  ---@cast char string[]
-  if M.is_type('table', char) then
-    if not vim.tbl_isempty(char) then
-      for _, c in ipairs(char) do
-        str = M.lstrip(c, str)
-      end
+  if type(char) == 'table' then
+    for _, c in ipairs(char) do
+      str = M.lstrip(c, str)
     end
     return str
   end
 
-  ---@cast char string
-  local i, len, new_str = 1, str:len(), ''
+  local i, new_str = 1, ''
   local other = false
-  while i <= len + 1 do
+  while i <= str:len() + 1 do
     if str:sub(i, i) ~= char and not other then
       other = true
     end
@@ -323,19 +314,14 @@ function M.rstrip(char, str)
     return str
   end
 
-  ---@cast char string[]
-  if M.is_type('table', char) then
-    if not vim.tbl_isempty(char) then
-      for _, c in ipairs(char) do
-        str = M.rstrip(c, str)
-      end
+  if type(char) == 'table' then
+    for _, c in ipairs(char) do
+      str = M.rstrip(c, str)
     end
     return str
   end
 
-  ---@cast char string
   str = str:reverse()
-
   if not vim.startswith(str, char) then
     return str:reverse()
   end
@@ -357,17 +343,13 @@ function M.strip(char, str)
     return str
   end
 
-  ---@cast char string[]
-  if M.is_type('table', char) then
-    if not vim.tbl_isempty(char) then
-      for _, c in ipairs(char) do
-        str = M.strip(c, str)
-      end
+  if type(char) == 'table' then
+    for _, c in ipairs(char) do
+      str = M.strip(c, str)
     end
     return str
   end
 
-  ---@cast char string
   return M.rstrip(char, M.lstrip(char, str))
 end
 
