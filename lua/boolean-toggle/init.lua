@@ -1,4 +1,3 @@
-local ERROR = vim.log.levels.ERROR
 local Util = require('boolean-toggle.util')
 
 local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = false })
@@ -80,7 +79,7 @@ function M.get_spec_values(ft, bool)
   })
   ft = ft or Util.optget('filetype', 'buf', vim.api.nvim_get_current_buf())
   if bool and not vim.list_contains({ 'true', 'false' }, bool) then
-    error(('Invalid value `%s`'):format(bool), ERROR)
+    error(('Invalid value `%s`'):format(bool))
   end
 
   local conv = vim.deepcopy(not bool and convert or (bool == 'true' and convert_to_true or convert_to_false))
@@ -187,8 +186,11 @@ function M.setup(opts)
     for _, spec in ipairs(config.custom_spec) do
       if not (spec.yes and spec.no) then
         vim.notify(
-          ('Spec is missing either its `yes` and/or `no` values\nyes: `%s`'):format(spec.yes or '', spec.no or ''),
-          ERROR
+          ('Spec is missing either its `yes` and/or `no` values\nyes: `%s`\nno: `%s`'):format(
+            spec.yes or '',
+            spec.no or ''
+          ),
+          vim.log.levels.ERROR
         )
       end
     end
@@ -203,13 +205,13 @@ end
 
 ---@param bool? 'true'|'false'
 ---@return boolean is_boolean
----@return integer|nil start_col
----@return integer|nil end_col
----@return table<string, { [1]: string, ft: string[] }>|nil convert
+---@return integer|nil|? start_col
+---@return integer|nil|? end_col
+---@return table<string, { [1]: string, ft: string[] }>|nil|? convert
 function M.boolean_under_cursor(bool)
   Util.validate({ bool = { bool, { 'string', 'nil' }, true } })
   if bool and not vim.list_contains({ 'true', 'false' }, bool) then
-    error(('Invalid value `%s`'):format(bool), ERROR)
+    error(('Invalid value `%s`'):format(bool))
   end
 
   local pos = vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win())
@@ -239,14 +241,8 @@ function M.boolean_under_cursor(bool)
 
   local bufnr = vim.api.nvim_get_current_buf()
   local ft = Util.optget('filetype', 'buf', bufnr) --[[@as string]]
-  local conv
-  if not bool then
-    conv = M.get_spec_values('ft')
-  elseif bool == 'true' then
-    conv = M.get_spec_values('ft', 'true')
-  elseif bool == 'false' then
-    conv = M.get_spec_values('ft', 'false')
-  end
+  local conv =
+    M.get_spec_values('ft', not bool and nil or (bool == 'true' and 'true' or (bool == 'false' and 'false' or nil)))
   if not conv[word] then
     return false
   end

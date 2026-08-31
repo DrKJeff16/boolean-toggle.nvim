@@ -17,7 +17,6 @@ https://github.com/user-attachments/assets/b3f7124a-736e-425c-9c08-f3e0504c238f
 
 ---
 
-
 ## Installation
 
 Requires Neovim >= `v0.11`
