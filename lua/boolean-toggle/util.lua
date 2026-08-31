@@ -353,5 +353,15 @@ function M.strip(char, str)
   return M.rstrip(char, M.lstrip(char, str))
 end
 
+---@generic T: table, V
+---@param t T
+---@param k string|integer
+---@param v V
+---@return V v
+function M.rawset(t, k, v)
+  rawset(t, k, v)
+  return v
+end
+
 return M
 -- vim: set ts=2 sts=2 sw=2 et ai si sta:

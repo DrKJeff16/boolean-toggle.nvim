@@ -1,12 +1,12 @@
 ---@class BooleanToggleOpts.Keymaps
----@field to_false? string
----@field to_true? string
----@field toggle? string
+---@field to_false? string|nil
+---@field to_true? string|nil
+---@field toggle? string|nil
 
 ---@class BooleanToggleDefaults.Keymaps: BooleanToggleOpts.Keymaps
----@field to_false? string
----@field to_true? string
----@field toggle? string
+---@field to_false string|nil
+---@field to_true string|nil
+---@field toggle string|nil
 
 ---@class BooleanToggleOpts
 ---@field auto_write? boolean

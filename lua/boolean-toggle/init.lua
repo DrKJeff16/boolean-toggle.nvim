@@ -1,4 +1,5 @@
-local ERROR = vim.log.levels.ERROR
+---@module 'boolean-toggle._meta'
+
 local Util = require('boolean-toggle.util')
 
 local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = false })
@@ -7,8 +8,9 @@ local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = 
 ---@field [1] string
 ---@field ft? string[]
 
----@type table<string, BooleanToggle.ConvertSpec>
-local convert_to_false = {
+local convert_to_false = { ---@type table<string, BooleanToggle.ConvertSpec>
+  ALWAYS = { 'NEVER', ft = { '*' } },
+  Always = { 'Never', ft = { '*' } },
   ENABLE = { 'DISABLE', ft = { '*' } },
   ENABLED = { 'DISABLED', ft = { '*' } },
   Enable = { 'Disable', ft = { '*' } },
@@ -20,6 +22,7 @@ local convert_to_false = {
   YES = { 'NO', ft = { '*' } },
   Yes = { 'No', ft = { '*' } },
   ['true'] = { 'false', ft = { '*' } },
+  always = { 'never', ft = { '*' } },
   enable = { 'disable', ft = { '*' } },
   enabled = { 'disabled', ft = { '*' } },
   on = { 'off', ft = { '*' } },
@@ -27,15 +30,16 @@ local convert_to_false = {
   yes = { 'no', ft = { '*' } },
 }
 
----@type table<string, BooleanToggle.ConvertSpec>
-local convert_to_true = {
+local convert_to_true = { ---@type table<string, BooleanToggle.ConvertSpec>
   DISABLE = { 'ENABLE', ft = { '*' } },
   DISABLED = { 'ENABLED', ft = { '*' } },
   Disable = { 'Enable', ft = { '*' } },
   Disabled = { 'Enabled', ft = { '*' } },
   FALSE = { 'TRUE', ft = { '*' } },
   False = { 'True', ft = { '*' } },
+  NEVER = { 'ALWAYS', ft = { '*' } },
   NO = { 'YES', ft = { '*' } },
+  Never = { 'Always', ft = { '*' } },
   No = { 'Yes', ft = { '*' } },
   OFF = { 'ON', ft = { '*' } },
   Off = { 'On', ft = { '*' } },
@@ -43,18 +47,19 @@ local convert_to_true = {
   ['nil'] = { 't', ft = { 'lisp' } },
   disable = { 'enable', ft = { '*' } },
   disabled = { 'enabled', ft = { '*' } },
+  never = { 'always', ft = { '*' } },
   no = { 'yes', ft = { '*' } },
   off = { 'on', ft = { '*' } },
 }
 
----@type table<string, BooleanToggle.ConvertSpec>
-local convert = vim.tbl_deep_extend('force', convert_to_true, convert_to_false)
+local convert = vim.tbl_deep_extend('force', convert_to_true, convert_to_false) ---@type table<string, BooleanToggle.ConvertSpec>
 
 ---@param line string
 ---@param start_col integer
 ---@param end_col integer
 ---@return string before
 ---@return string after
+---@nodiscard
 local function get_boolean_surround(line, start_col, end_col)
   Util.validate({
     line = { line, { 'string' } },
@@ -80,7 +85,7 @@ function M.get_spec_values(ft, bool)
   })
   ft = ft or Util.optget('filetype', 'buf', vim.api.nvim_get_current_buf())
   if bool and not vim.list_contains({ 'true', 'false' }, bool) then
-    error(('Invalid value `%s`'):format(bool), ERROR)
+    error(('Invalid value `%s`'):format(bool))
   end
 
   local conv = vim.deepcopy(not bool and convert or (bool == 'true' and convert_to_true or convert_to_false))
@@ -129,7 +134,6 @@ function M.setup(opts)
             'TelescopeResults',
             'fzf',
             'lazy',
-            'markdown',
             'neo-tree',
             'qf',
             'snacks_picker_input',
@@ -162,10 +166,12 @@ function M.setup(opts)
             pcall(vim.keymap.del, 'n', config.keymaps.to_false, { buf = ev.buf })
             vim.g.boolean_toggle_to_false_keymap = 0
           elseif M.boolean_under_cursor('true') then
-            vim.keymap.set('n', config.keymaps.to_false, M.cursor_set_to_false, {
-              desc = 'Set Boolean on Cursor to `false`',
-              buf = ev.buf,
-            })
+            vim.keymap.set(
+              'n',
+              config.keymaps.to_false,
+              M.cursor_set_to_false,
+              { buf = ev.buf, desc = 'Set Boolean on Cursor to `false`' }
+            )
             vim.g.boolean_toggle_to_false_keymap = 1
           end
         end
@@ -173,10 +179,12 @@ function M.setup(opts)
           if not M.boolean_under_cursor('false') then
             pcall(vim.keymap.del, 'n', config.keymaps.to_true, { buf = ev.buf })
           else
-            vim.keymap.set('n', config.keymaps.to_true, M.cursor_set_to_true, {
-              desc = 'Set Boolean on Cursor to `true`',
-              buf = ev.buf,
-            })
+            vim.keymap.set(
+              'n',
+              config.keymaps.to_true,
+              M.cursor_set_to_true,
+              { buf = ev.buf, desc = 'Set Boolean on Cursor to `true`' }
+            )
           end
         end
       end,
@@ -187,8 +195,11 @@ function M.setup(opts)
     for _, spec in ipairs(config.custom_spec) do
       if not (spec.yes and spec.no) then
         vim.notify(
-          ('Spec is missing either its `yes` and/or `no` values\nyes: `%s`'):format(spec.yes or '', spec.no or ''),
-          ERROR
+          ('Spec is missing either its `yes` and/or `no` values\nyes: `%s`\nno: `%s`'):format(
+            spec.yes or '',
+            spec.no or ''
+          ),
+          vim.log.levels.ERROR
         )
       end
     end
@@ -203,13 +214,13 @@ end
 
 ---@param bool? 'true'|'false'
 ---@return boolean is_boolean
----@return integer|nil start_col
----@return integer|nil end_col
----@return table<string, { [1]: string, ft: string[] }>|nil convert
+---@return integer|nil|? start_col
+---@return integer|nil|? end_col
+---@return table<string, { [1]: string, ft: string[] }>|nil|? convert
 function M.boolean_under_cursor(bool)
   Util.validate({ bool = { bool, { 'string', 'nil' }, true } })
   if bool and not vim.list_contains({ 'true', 'false' }, bool) then
-    error(('Invalid value `%s`'):format(bool), ERROR)
+    error(('Invalid value `%s`'):format(bool))
   end
 
   local pos = vim.api.nvim_win_get_cursor(vim.api.nvim_get_current_win())
@@ -239,14 +250,8 @@ function M.boolean_under_cursor(bool)
 
   local bufnr = vim.api.nvim_get_current_buf()
   local ft = Util.optget('filetype', 'buf', bufnr) --[[@as string]]
-  local conv
-  if not bool then
-    conv = M.get_spec_values('ft')
-  elseif bool == 'true' then
-    conv = M.get_spec_values('ft', 'true')
-  elseif bool == 'false' then
-    conv = M.get_spec_values('ft', 'false')
-  end
+  local conv =
+    M.get_spec_values('ft', not bool and nil or (bool == 'true' and 'true' or (bool == 'false' and 'false' or nil)))
   if not conv[word] then
     return false
   end
@@ -290,7 +295,7 @@ function M.cursor_toggle_boolean()
   vim.api.nvim_win_set_cursor(win, pos)
 
   if config.auto_write then
-    success = pcall(vim.cmd.write)
+    success = pcall(vim.cmd.write, { mods = { noautocmd = true } })
   end
   return success
 end
@@ -330,7 +335,7 @@ function M.cursor_set_to_false()
   vim.api.nvim_win_set_cursor(win, pos)
 
   if config.auto_write then
-    success = pcall(vim.cmd.write)
+    success = pcall(vim.cmd.write, { mods = { noautocmd = true } })
   end
   return success
 end
@@ -370,17 +375,21 @@ function M.cursor_set_to_true()
   vim.api.nvim_win_set_cursor(win, pos)
 
   if config.auto_write then
-    success = pcall(vim.cmd.write)
+    success = pcall(vim.cmd.write, { mods = { noautocmd = true } })
   end
   return success
 end
 
 local BooleanToggle = setmetatable(M, {
   __index = function(self, k)
-    if Util.mod_exists('boolean-toggle.' .. k) then
-      return require('boolean-toggle.' .. k)
+    local raw = rawget(self, k) or nil
+    if raw then
+      return raw
     end
-    return rawget(self, k) or nil
+
+    if Util.mod_exists('boolean-toggle.' .. k) then
+      return Util.rawset(self, k, require('boolean-toggle.' .. k))
+    end
   end,
 })
 
