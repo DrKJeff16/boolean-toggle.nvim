@@ -1,12 +1,11 @@
 local ERROR = vim.log.levels.ERROR
 local Util = require('boolean-toggle.util')
-local Config = require('boolean-toggle.config')
 
 local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = false })
 
 ---@class BooleanToggle.ConvertSpec
 ---@field [1] string
----@field ft? string[]|nil
+---@field ft? string[]
 
 ---@type table<string, BooleanToggle.ConvertSpec>
 local convert_to_false = {
@@ -23,7 +22,7 @@ local convert_to_false = {
   ['true'] = { 'false', ft = { '*' } },
   enable = { 'disable', ft = { '*' } },
   enabled = { 'disabled', ft = { '*' } },
-  on = { 'on', ft = { '*' } },
+  on = { 'off', ft = { '*' } },
   t = { 'nil', ft = { 'lisp' } },
   yes = { 'no', ft = { '*' } },
 }
@@ -85,11 +84,12 @@ function M.get_spec_values(ft, bool)
   end
 
   local conv = vim.deepcopy(not bool and convert or (bool == 'true' and convert_to_true or convert_to_false))
-  if vim.tbl_isempty(Config.get().custom_spec) then
+  local config = require('boolean-toggle.config').get()
+  if vim.tbl_isempty(config.custom_spec) then
     return conv
   end
 
-  for _, spec in ipairs(Config.get().custom_spec) do
+  for _, spec in ipairs(config.custom_spec) do
     Util.validate({
       ['spec.yes'] = { spec.yes, { 'string' } },
       ['spec.no'] = { spec.no, { 'string' } },
@@ -114,9 +114,11 @@ end
 function M.setup(opts)
   Util.validate({ opts = { opts, { 'table', 'nil' }, true } })
 
+  local Config = require('boolean-toggle.config')
   Config.setup(opts or {})
 
-  if Config.get().keymaps then
+  local config = Config.get()
+  if config.keymaps then
     vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorHold' }, {
       group = vim.api.nvim_create_augroup('boolean_toggle', { clear = true }),
       callback = function(ev)
@@ -143,35 +145,35 @@ function M.setup(opts)
           return
         end
 
-        if Config.get().keymaps.toggle and Config.get().keymaps.toggle ~= '' then
+        if config.keymaps.toggle and config.keymaps.toggle ~= '' then
           if not M.boolean_under_cursor() and vim.g.boolean_toggle_toggle_keymap == 1 then
-            pcall(vim.keymap.del, 'n', Config.get().keymaps.toggle, { buf = ev.buf })
+            pcall(vim.keymap.del, 'n', config.keymaps.toggle, { buf = ev.buf })
             vim.g.boolean_toggle_toggle_keymap = 0
           elseif M.boolean_under_cursor() then
             vim.g.boolean_toggle_toggle_keymap = 1
-            vim.keymap.set('n', Config.get().keymaps.toggle, M.cursor_toggle_boolean, {
+            vim.keymap.set('n', config.keymaps.toggle, M.cursor_toggle_boolean, {
               desc = 'Invert Boolean Value on Cursor',
               buf = ev.buf,
             })
           end
         end
-        if Config.get().keymaps.to_false and Config.get().keymaps.to_false ~= '' then
+        if config.keymaps.to_false and config.keymaps.to_false ~= '' then
           if not M.boolean_under_cursor('true') and vim.g.boolean_toggle_to_false_keymap == 1 then
-            pcall(vim.keymap.del, 'n', Config.get().keymaps.to_false, { buf = ev.buf })
+            pcall(vim.keymap.del, 'n', config.keymaps.to_false, { buf = ev.buf })
             vim.g.boolean_toggle_to_false_keymap = 0
           elseif M.boolean_under_cursor('true') then
-            vim.keymap.set('n', Config.get().keymaps.to_false, M.cursor_set_to_false, {
+            vim.keymap.set('n', config.keymaps.to_false, M.cursor_set_to_false, {
               desc = 'Set Boolean on Cursor to `false`',
               buf = ev.buf,
             })
             vim.g.boolean_toggle_to_false_keymap = 1
           end
         end
-        if Config.get().keymaps.to_true and Config.get().keymaps.to_true ~= '' then
+        if config.keymaps.to_true and config.keymaps.to_true ~= '' then
           if not M.boolean_under_cursor('false') then
-            pcall(vim.keymap.del, 'n', Config.get().keymaps.to_true, { buf = ev.buf })
+            pcall(vim.keymap.del, 'n', config.keymaps.to_true, { buf = ev.buf })
           else
-            vim.keymap.set('n', Config.get().keymaps.to_true, M.cursor_set_to_true, {
+            vim.keymap.set('n', config.keymaps.to_true, M.cursor_set_to_true, {
               desc = 'Set Boolean on Cursor to `true`',
               buf = ev.buf,
             })
@@ -181,8 +183,8 @@ function M.setup(opts)
     })
   end
 
-  if Config.get().custom_spec and not vim.tbl_isempty(Config.get().custom_spec) then
-    for _, spec in ipairs(Config.get().custom_spec) do
+  if config.custom_spec and not vim.tbl_isempty(config.custom_spec) then
+    for _, spec in ipairs(config.custom_spec) do
       if not (spec.yes and spec.no) then
         vim.notify(
           ('Spec is missing either its `yes` and/or `no` values\nyes: `%s`'):format(spec.yes or '', spec.no or ''),
@@ -260,6 +262,7 @@ end
 function M.cursor_toggle_boolean()
   local bufnr = vim.api.nvim_get_current_buf()
   local ok, start_col, end_col, conv = M.boolean_under_cursor()
+  local config = require('boolean-toggle.config').get()
   if
     not (
       ok
@@ -267,7 +270,7 @@ function M.cursor_toggle_boolean()
       and end_col
       and conv
       and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
-    ) or vim.list_contains(Config.get().ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr }))
+    ) or vim.list_contains(config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr }))
   then
     return false
   end
@@ -286,7 +289,7 @@ function M.cursor_toggle_boolean()
   local success = pcall(vim.cmd.undojoin)
   vim.api.nvim_win_set_cursor(win, pos)
 
-  if Config.get().auto_write then
+  if config.auto_write then
     success = pcall(vim.cmd.write)
   end
   return success
@@ -296,6 +299,7 @@ end
 function M.cursor_set_to_false()
   local bufnr = vim.api.nvim_get_current_buf()
   local ok, start_col, end_col, conv = M.boolean_under_cursor('false')
+  local config = require('boolean-toggle.config').get()
   if
     not (
       ok
@@ -303,7 +307,7 @@ function M.cursor_set_to_false()
       and end_col
       and conv
       and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
-    ) or vim.list_contains(Config.get().ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr }))
+    ) or vim.list_contains(config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr }))
   then
     return false
   end
@@ -325,7 +329,7 @@ function M.cursor_set_to_false()
   local success = pcall(vim.cmd.undojoin)
   vim.api.nvim_win_set_cursor(win, pos)
 
-  if Config.get().auto_write then
+  if config.auto_write then
     success = pcall(vim.cmd.write)
   end
   return success
@@ -335,6 +339,7 @@ end
 function M.cursor_set_to_true()
   local bufnr = vim.api.nvim_get_current_buf()
   local ok, start_col, end_col, conv = M.boolean_under_cursor('true')
+  local config = require('boolean-toggle.config').get()
   if
     not (
       ok
@@ -342,7 +347,7 @@ function M.cursor_set_to_true()
       and end_col
       and conv
       and vim.list_contains({ 'acwrite', '' }, vim.api.nvim_get_option_value('buftype', { buf = bufnr }))
-    ) or vim.list_contains(Config.get().ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr }))
+    ) or vim.list_contains(config.ignore_ft, vim.api.nvim_get_option_value('filetype', { buf = bufnr }))
   then
     return false
   end
@@ -364,7 +369,7 @@ function M.cursor_set_to_true()
   local success = pcall(vim.cmd.undojoin)
   vim.api.nvim_win_set_cursor(win, pos)
 
-  if Config.get().auto_write then
+  if config.auto_write then
     success = pcall(vim.cmd.write)
   end
   return success
