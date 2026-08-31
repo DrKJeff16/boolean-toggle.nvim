@@ -10,20 +10,30 @@ local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = 
 
 ---@type table<string, BooleanToggle.ConvertSpec>
 local convert_to_false = {
+  ENABLE = { 'DISABLE', ft = { '*' } },
+  ENABLED = { 'DISABLED', ft = { '*' } },
+  Enable = { 'Disable', ft = { '*' } },
+  Enabled = { 'Disabled', ft = { '*' } },
   ON = { 'OFF', ft = { '*' } },
   On = { 'Off', ft = { '*' } },
   TRUE = { 'FALSE', ft = { '*' } },
   True = { 'False', ft = { '*' } },
   YES = { 'NO', ft = { '*' } },
   Yes = { 'No', ft = { '*' } },
-  ['nil'] = { 't', ft = { 'lisp' } },
   ['true'] = { 'false', ft = { '*' } },
-  on = { 'off', ft = { '*' } },
+  enable = { 'disable', ft = { '*' } },
+  enabled = { 'disabled', ft = { '*' } },
+  on = { 'on', ft = { '*' } },
+  t = { 'nil', ft = { 'lisp' } },
   yes = { 'no', ft = { '*' } },
 }
 
 ---@type table<string, BooleanToggle.ConvertSpec>
 local convert_to_true = {
+  DISABLE = { 'ENABLE', ft = { '*' } },
+  DISABLED = { 'ENABLED', ft = { '*' } },
+  Disable = { 'Enable', ft = { '*' } },
+  Disabled = { 'Enabled', ft = { '*' } },
   FALSE = { 'TRUE', ft = { '*' } },
   False = { 'True', ft = { '*' } },
   NO = { 'YES', ft = { '*' } },
@@ -31,34 +41,15 @@ local convert_to_true = {
   OFF = { 'ON', ft = { '*' } },
   Off = { 'On', ft = { '*' } },
   ['false'] = { 'true', ft = { '*' } },
+  ['nil'] = { 't', ft = { 'lisp' } },
+  disable = { 'enable', ft = { '*' } },
+  disabled = { 'enabled', ft = { '*' } },
   no = { 'yes', ft = { '*' } },
   off = { 'on', ft = { '*' } },
-  t = { 'nil', ft = { 'lisp' } },
 }
 
 ---@type table<string, BooleanToggle.ConvertSpec>
-local convert = {
-  FALSE = { 'TRUE', ft = { '*' } },
-  False = { 'True', ft = { '*' } },
-  NO = { 'NO', ft = { '*' } },
-  No = { 'Yes', ft = { '*' } },
-  OFF = { 'ON', ft = { '*' } },
-  ON = { 'OFF', ft = { '*' } },
-  Off = { 'On', ft = { '*' } },
-  On = { 'Off', ft = { '*' } },
-  TRUE = { 'FALSE', ft = { '*' } },
-  True = { 'False', ft = { '*' } },
-  YES = { 'NO', ft = { '*' } },
-  Yes = { 'No', ft = { '*' } },
-  ['false'] = { 'true', ft = { '*' } },
-  ['nil'] = { 't', ft = { 'lisp' } },
-  ['true'] = { 'false', ft = { '*' } },
-  no = { 'yes', ft = { '*' } },
-  off = { 'on', ft = { '*' } },
-  on = { 'off', ft = { '*' } },
-  t = { 'nil', ft = { 'lisp' } },
-  yes = { 'no', ft = { '*' } },
-}
+local convert = vim.tbl_deep_extend('force', convert_to_true, convert_to_false)
 
 ---@param line string
 ---@param start_col integer
