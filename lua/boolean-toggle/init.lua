@@ -26,7 +26,7 @@ local convert_to_false = {
 local convert_to_true = {
   FALSE = { 'TRUE', ft = { '*' } },
   False = { 'True', ft = { '*' } },
-  NO = { 'NO', ft = { '*' } },
+  NO = { 'YES', ft = { '*' } },
   No = { 'Yes', ft = { '*' } },
   OFF = { 'ON', ft = { '*' } },
   Off = { 'On', ft = { '*' } },
