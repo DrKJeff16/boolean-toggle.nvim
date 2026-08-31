@@ -30,14 +30,6 @@ local Util = require('boolean-toggle.util')
 ---@class BooleanToggle.Config
 local M = {}
 
----@diagnostic disable-next-line:missing-fields
-local config = {} ---@type BooleanToggleDefaults
-
----@return BooleanToggleDefaults config
-function M.get()
-  return config
-end
-
 ---@return BooleanToggleDefaults defaults
 function M.get_defaults()
   return { ---@type BooleanToggleDefaults
@@ -46,6 +38,13 @@ function M.get_defaults()
     ignore_ft = {},
     keymaps = { toggle = nil, to_false = nil, to_true = nil },
   }
+end
+
+local config = M.get_defaults()
+
+---@return BooleanToggleDefaults config
+function M.get()
+  return config
 end
 
 ---@param opts? BooleanToggleOpts
