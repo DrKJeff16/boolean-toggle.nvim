@@ -6,8 +6,7 @@ local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = 
 ---@field [1] string
 ---@field ft? string[]
 
----@type table<string, BooleanToggle.ConvertSpec>
-local convert_to_false = {
+local convert_to_false = { ---@type table<string, BooleanToggle.ConvertSpec>
   ENABLE = { 'DISABLE', ft = { '*' } },
   ENABLED = { 'DISABLED', ft = { '*' } },
   Enable = { 'Disable', ft = { '*' } },
@@ -26,8 +25,7 @@ local convert_to_false = {
   yes = { 'no', ft = { '*' } },
 }
 
----@type table<string, BooleanToggle.ConvertSpec>
-local convert_to_true = {
+local convert_to_true = { ---@type table<string, BooleanToggle.ConvertSpec>
   DISABLE = { 'ENABLE', ft = { '*' } },
   DISABLED = { 'ENABLED', ft = { '*' } },
   Disable = { 'Enable', ft = { '*' } },
@@ -46,14 +44,14 @@ local convert_to_true = {
   off = { 'on', ft = { '*' } },
 }
 
----@type table<string, BooleanToggle.ConvertSpec>
-local convert = vim.tbl_deep_extend('force', convert_to_true, convert_to_false)
+local convert = vim.tbl_deep_extend('force', convert_to_true, convert_to_false) ---@type table<string, BooleanToggle.ConvertSpec>
 
 ---@param line string
 ---@param start_col integer
 ---@param end_col integer
 ---@return string before
 ---@return string after
+---@nodiscard
 local function get_boolean_surround(line, start_col, end_col)
   Util.validate({
     line = { line, { 'string' } },
@@ -128,7 +126,6 @@ function M.setup(opts)
             'TelescopeResults',
             'fzf',
             'lazy',
-            'markdown',
             'neo-tree',
             'qf',
             'snacks_picker_input',
@@ -161,10 +158,12 @@ function M.setup(opts)
             pcall(vim.keymap.del, 'n', config.keymaps.to_false, { buf = ev.buf })
             vim.g.boolean_toggle_to_false_keymap = 0
           elseif M.boolean_under_cursor('true') then
-            vim.keymap.set('n', config.keymaps.to_false, M.cursor_set_to_false, {
-              desc = 'Set Boolean on Cursor to `false`',
-              buf = ev.buf,
-            })
+            vim.keymap.set(
+              'n',
+              config.keymaps.to_false,
+              M.cursor_set_to_false,
+              { buf = ev.buf, desc = 'Set Boolean on Cursor to `false`' }
+            )
             vim.g.boolean_toggle_to_false_keymap = 1
           end
         end
@@ -172,10 +171,12 @@ function M.setup(opts)
           if not M.boolean_under_cursor('false') then
             pcall(vim.keymap.del, 'n', config.keymaps.to_true, { buf = ev.buf })
           else
-            vim.keymap.set('n', config.keymaps.to_true, M.cursor_set_to_true, {
-              desc = 'Set Boolean on Cursor to `true`',
-              buf = ev.buf,
-            })
+            vim.keymap.set(
+              'n',
+              config.keymaps.to_true,
+              M.cursor_set_to_true,
+              { buf = ev.buf, desc = 'Set Boolean on Cursor to `true`' }
+            )
           end
         end
       end,
@@ -286,7 +287,7 @@ function M.cursor_toggle_boolean()
   vim.api.nvim_win_set_cursor(win, pos)
 
   if config.auto_write then
-    success = pcall(vim.cmd.write)
+    success = pcall(vim.cmd.write, { mods = { noautocmd = true } })
   end
   return success
 end
@@ -326,7 +327,7 @@ function M.cursor_set_to_false()
   vim.api.nvim_win_set_cursor(win, pos)
 
   if config.auto_write then
-    success = pcall(vim.cmd.write)
+    success = pcall(vim.cmd.write, { mods = { noautocmd = true } })
   end
   return success
 end
@@ -366,7 +367,7 @@ function M.cursor_set_to_true()
   vim.api.nvim_win_set_cursor(win, pos)
 
   if config.auto_write then
-    success = pcall(vim.cmd.write)
+    success = pcall(vim.cmd.write, { mods = { noautocmd = true } })
   end
   return success
 end
