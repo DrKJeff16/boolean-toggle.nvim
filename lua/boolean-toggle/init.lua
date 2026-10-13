@@ -1,3 +1,5 @@
+---@module 'boolean-toggle._meta'
+
 local Util = require('boolean-toggle.util')
 
 local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = false })
@@ -7,6 +9,8 @@ local delim = vim.split([[.,'"()[]{}$#?!:;%%^%*+=\\|/<>~` ]], '', { trimempty = 
 ---@field ft? string[]
 
 local convert_to_false = { ---@type table<string, BooleanToggle.ConvertSpec>
+  ALWAYS = { 'NEVER', ft = { '*' } },
+  Always = { 'Never', ft = { '*' } },
   ENABLE = { 'DISABLE', ft = { '*' } },
   ENABLED = { 'DISABLED', ft = { '*' } },
   Enable = { 'Disable', ft = { '*' } },
@@ -18,6 +22,7 @@ local convert_to_false = { ---@type table<string, BooleanToggle.ConvertSpec>
   YES = { 'NO', ft = { '*' } },
   Yes = { 'No', ft = { '*' } },
   ['true'] = { 'false', ft = { '*' } },
+  always = { 'never', ft = { '*' } },
   enable = { 'disable', ft = { '*' } },
   enabled = { 'disabled', ft = { '*' } },
   on = { 'off', ft = { '*' } },
@@ -32,7 +37,9 @@ local convert_to_true = { ---@type table<string, BooleanToggle.ConvertSpec>
   Disabled = { 'Enabled', ft = { '*' } },
   FALSE = { 'TRUE', ft = { '*' } },
   False = { 'True', ft = { '*' } },
+  NEVER = { 'ALWAYS', ft = { '*' } },
   NO = { 'YES', ft = { '*' } },
+  Never = { 'Always', ft = { '*' } },
   No = { 'Yes', ft = { '*' } },
   OFF = { 'ON', ft = { '*' } },
   Off = { 'On', ft = { '*' } },
@@ -40,6 +47,7 @@ local convert_to_true = { ---@type table<string, BooleanToggle.ConvertSpec>
   ['nil'] = { 't', ft = { 'lisp' } },
   disable = { 'enable', ft = { '*' } },
   disabled = { 'enabled', ft = { '*' } },
+  never = { 'always', ft = { '*' } },
   no = { 'yes', ft = { '*' } },
   off = { 'on', ft = { '*' } },
 }
@@ -374,10 +382,14 @@ end
 
 local BooleanToggle = setmetatable(M, {
   __index = function(self, k)
-    if Util.mod_exists('boolean-toggle.' .. k) then
-      return require('boolean-toggle.' .. k)
+    local raw = rawget(self, k) or nil
+    if raw then
+      return raw
     end
-    return rawget(self, k) or nil
+
+    if Util.mod_exists('boolean-toggle.' .. k) then
+      return Util.rawset(self, k, require('boolean-toggle.' .. k))
+    end
   end,
 })
 
