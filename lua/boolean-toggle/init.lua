@@ -124,8 +124,8 @@ function M.get_spec_values(ft, bool)
     bool = { bool, { 'string', 'nil' }, true },
   })
   ft = ft or M.util.optget('filetype', 'buf', vim.api.nvim_get_current_buf())
-  if bool and not vim.list_contains({ 'true', 'false' }, bool) then
-    error(('Invalid value `%s`'):format(bool))
+  if bool then
+    assert(vim.list_contains({ 'false', 'true' }, bool), ('Invalid value `%s`'):format(bool))
   end
 
   local conv = vim.deepcopy(not bool and convert or (bool == 'true' and convert_to_true or convert_to_false))
@@ -240,8 +240,8 @@ end
 ---@return table<string, { [1]: string, ft: string[] }>|nil|? convert
 function M.boolean_under_cursor(bool)
   M.util.validate({ bool = { bool, { 'string', 'nil' }, true } })
-  if bool and not vim.list_contains({ 'true', 'false' }, bool) then
-    error(('Invalid value `%s`'):format(bool))
+  if bool then
+    assert(vim.list_contains({ 'true', 'false' }, bool), ('Invalid value `%s`'):format(bool))
   end
 
   local line = vim.api.nvim_get_current_line()

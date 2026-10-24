@@ -5,8 +5,6 @@
 ---@field [3]? boolean
 ---@field [4]? string
 
-local ERROR = vim.log.levels.ERROR
-
 ---@class BooleanToggle.Util
 local M = {}
 
@@ -22,23 +20,26 @@ function M.optget(option, param, param_value)
     param_value = { param_value, { 'string', 'number', 'nil' }, true },
   })
   param = param or 'buf'
-  if not vim.list_contains({ 'scope', 'ft', 'buf', 'win' }, param) then
-    error(('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(vim.inspect(param)), ERROR)
-  end
+  assert(
+    vim.list_contains({ 'scope', 'ft', 'buf', 'win' }, param),
+    ('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(vim.inspect(param))
+  )
+
   if param == 'scope' then
     param_value = param_value or 'local'
-    if not vim.list_contains({ 'global', 'local' }, param_value) then
-      error(('Bad param value `%s`\nCan only accept `global` or `local`!'):format(vim.inspect(param_value)), ERROR)
-    end
+    assert(
+      vim.list_contains({ 'global', 'local' }, param_value),
+      ('Bad param value `%s`\nCan only accept `global` or `local`!'):format(vim.inspect(param_value))
+    )
   end
-  if param == 'ft' and (not param_value or type(param_value) ~= 'string') then
-    error('Missing/bad value for `ft` parameter!', ERROR)
+  if param == 'ft' then
+    assert(param_value and type(param_value) == 'string', 'Missing/bad value for `ft` parameter!')
   end
-  if
-    vim.list_contains({ 'win', 'buf' }, param)
-    and not (param_value and type(param_value) == 'number' and M.is_int(param_value, param_value >= 0))
-  then
-    error('Missing/bad value for `win`/`buf` parameter!', ERROR)
+  if vim.list_contains({ 'win', 'buf' }, param) then
+    assert(
+      param_value and type(param_value) == 'number' and M.is_int(param_value, param_value >= 0),
+      'Missing/bad value for `win`/`buf` parameter!'
+    )
   end
 
   return vim.api.nvim_get_option_value(option, { [param] = param_value })
@@ -54,29 +55,29 @@ function M.optset(option, value, param, param_value)
     param = { param, { 'string', 'nil' }, true },
     param_value = { param_value, { 'string', 'number', 'nil' }, true },
   })
-  if value == nil then
-    error('Empty option value is unacceptable!', ERROR)
-  end
+  assert(value ~= nil, 'Empty option value is unacceptable!')
   param = param or 'buf'
 
-  if not vim.list_contains({ 'scope', 'ft', 'buf', 'win' }, param) then
-    error(('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(vim.inspect(param)), ERROR)
-  end
+  assert(
+    vim.list_contains({ 'scope', 'ft', 'buf', 'win' }, param),
+    ('Bad parameter: `%s`\nCan only accept `scope`, `ft`, `buf` or `win`!'):format(vim.inspect(param))
+  )
 
   if param == 'scope' then
     param_value = param_value or 'local'
-    if not vim.list_contains({ 'global', 'local' }, param_value) then
-      error(('Bad param value `%s`\nCan only accept `global` or `local`!'):format(vim.inspect(param_value)), ERROR)
-    end
+    assert(
+      vim.list_contains({ 'global', 'local' }, param_value),
+      ('Bad param value `%s`\nCan only accept `global` or `local`!'):format(vim.inspect(param_value))
+    )
   end
-  if param == 'ft' and (not param_value or type(param_value) ~= 'string') then
-    error('Missing/bad value for `ft` parameter!', ERROR)
+  if param == 'ft' then
+    assert(param_value and type(param_value) == 'string', 'Missing/bad value for `ft` parameter!')
   end
-  if
-    vim.list_contains({ 'win', 'buf' }, param)
-    and not (param_value and type(param_value) == 'number' and M.is_int(param_value, param_value >= 0))
-  then
-    error('Missing/bad value for `win`/`buf` parameter!', ERROR)
+  if vim.list_contains({ 'win', 'buf' }, param) then
+    assert(
+      param_value and type(param_value) == 'number' and M.is_int(param_value, param_value >= 0),
+      'Missing/bad value for `win`/`buf` parameter!'
+    )
   end
 
   vim.api.nvim_set_option_value(option, value, { [param] = param_value })
@@ -93,10 +94,9 @@ end
 ---
 ---If the list is empty it'll just return it as-is.
 ---
----If the data passed to the function is not a table,
----an error will be raised.
+---If the data passed to the function is not a table, an error will be raised.
 --- ---
----@generic T:table
+---@generic T: table
 ---@param T T
 ---@return T NT
 function M.dedup(T)
@@ -170,10 +170,9 @@ end
 ---
 ---If the passed data is an empty table it'll be returned as-is.
 ---
----If the data passed to the function is not a table,
----an error will be raised.
+---If the data passed to the function is not a table, an error will be raised.
 --- ---
----@generic T
+---@generic T: table
 ---@param T T
 ---@return T T
 function M.reverse(T)
