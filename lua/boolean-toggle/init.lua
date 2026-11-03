@@ -115,9 +115,12 @@ setmetatable(M, {
   end,
 })
 
----@param ft? string
----@param bool? 'true'|'false'
+---@param ft string
+---@param bool 'true'|'false'
 ---@return table<string, { [1]: string, ft: string[] }> values
+---@overload fun(): values: table<string, { [1]: string, ft: string[] }>
+---@overload fun(ft: string): values: table<string, { [1]: string, ft: string[] }>
+---@overload fun(ft: nil, bool: 'true'|'false'): values: table<string, { [1]: string, ft: string[] }>
 function M.get_spec_values(ft, bool)
   M.util.validate({
     ft = { ft, { 'string', 'nil' }, true },
@@ -148,7 +151,8 @@ function M.get_spec_values(ft, bool)
   return conv
 end
 
----@param opts? BooleanToggleOpts
+---@param opts BooleanToggleOpts
+---@overload fun()
 function M.setup(opts)
   M.util.validate({ opts = { opts, { 'table', 'nil' }, true } })
 
@@ -233,11 +237,12 @@ function M.setup(opts)
   end
 end
 
----@param bool? 'true'|'false'
+---@param bool 'true'|'false'
 ---@return boolean is_boolean
 ---@return integer|nil|? start_col
 ---@return integer|nil|? end_col
 ---@return table<string, { [1]: string, ft: string[] }>|nil|? convert
+---@overload fun(): is_boolean: boolean, start_col: integer|nil|?, end_col: integer|nil|?, convert: table<string, { [1]: string, ft: string[] }>|nil|?
 function M.boolean_under_cursor(bool)
   M.util.validate({ bool = { bool, { 'string', 'nil' }, true } })
   if bool then

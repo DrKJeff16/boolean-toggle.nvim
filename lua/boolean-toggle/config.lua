@@ -47,12 +47,13 @@ function M.get()
   return config
 end
 
----@param opts? BooleanToggleOpts
+---@param opts BooleanToggleOpts
+---@overload fun()
 function M.setup(opts)
   Util.validate({ opts = { opts, { 'table', 'nil' }, true } })
 
   local defaults = M.get_defaults()
-  config = vim.tbl_deep_extend('keep', opts or {}, defaults)
+  config = vim.tbl_deep_extend('force', defaults, opts or {})
 
   for k in pairs(config) do
     if not defaults[k] then

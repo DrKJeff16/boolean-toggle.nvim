@@ -192,9 +192,10 @@ end
 ---Checks if module `mod` exists to be imported.
 --- ---
 ---@param mod string The `require()` argument to be checked
----@param ret? boolean Whether to return the called module
+---@param ret boolean Whether to return the called module
 ---@return boolean exists A boolean indicating whether the module exists or not
----@return unknown? module
+---@return unknown|nil|? module
+---@overload fun(mod: string): exists: boolean
 function M.mod_exists(mod, ret)
   M.validate({
     mod = { mod, { 'string' } },
@@ -214,8 +215,9 @@ end
 ---Checks if a given number is type integer.
 --- ---
 ---@param num number
----@param cond? boolean
+---@param cond boolean
 ---@return boolean int
+---@overload fun(num: number): int: boolean
 function M.is_int(num, cond)
   M.validate({
     num = { num, { 'number' } },
@@ -225,8 +227,7 @@ function M.is_int(num, cond)
     cond = true
   end
 
-  local is_int = math.floor(num) == num and math.ceil(num) == num
-  return is_int and cond
+  return math.floor(num) == num and math.ceil(num) == num and cond
 end
 
 ---Checks whether `data` is of type `t` or not.
