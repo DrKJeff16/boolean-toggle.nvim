@@ -9,6 +9,7 @@ local excluded_ft = { ---@type string[]
   'fzf',
   'lazy',
   'neo-tree',
+  'picker-prompt',
   'qf',
   'snacks_picker_input',
 }
@@ -225,15 +226,10 @@ function M.setup(opts)
   end
 
   for _, spec in ipairs(config.custom_spec) do
-    if not (spec.yes and spec.no) then
-      vim.notify(
-        ('Spec is missing either its `yes` and/or `no` values\nyes: `%s`\nno: `%s`'):format(
-          spec.yes or '',
-          spec.no or ''
-        ),
-        vim.log.levels.ERROR
-      )
-    end
+    assert(
+      spec.yes and spec.no,
+      ('Spec is missing either its `yes` and/or `no` values\nyes: `%s`\nno: `%s`'):format(spec.yes or '', spec.no or '')
+    )
   end
 end
 

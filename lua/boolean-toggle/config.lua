@@ -1,7 +1,7 @@
 ---@class BooleanToggleOpts.Keymaps
----@field to_false? string|nil
----@field to_true? string|nil
----@field toggle? string|nil
+---@field to_false? string
+---@field to_true? string
+---@field toggle? string
 
 ---@class BooleanToggleDefaults.Keymaps: BooleanToggleOpts.Keymaps
 ---@field to_false string|nil
@@ -27,6 +27,17 @@
 
 local Util = require('boolean-toggle.util')
 
+---@param config BooleanToggleDefaults
+local function validate_config(config)
+  Util.validate({
+    config = { config, { 'table' } },
+    ['config.auto_write'] = { config.auto_write, { 'boolean' } },
+    ['config.custom_spec'] = { config.custom_spec, { 'table' } },
+    ['config.ignore_ft'] = { config.ignore_ft, { 'table' } },
+    ['config.keymaps'] = { config.keymaps, { 'table' } },
+  })
+end
+
 ---@class BooleanToggle.Config
 local M = {}
 
@@ -36,7 +47,7 @@ function M.get_defaults()
     auto_write = true,
     custom_spec = {},
     ignore_ft = {},
-    keymaps = { toggle = nil, to_false = nil, to_true = nil },
+    keymaps = {},
   }
 end
 
@@ -60,6 +71,9 @@ function M.setup(opts)
       config[k] = nil
     end
   end
+
+  validate_config(config)
+
   vim.g.boolean_nvim_setup = 1
 end
 
